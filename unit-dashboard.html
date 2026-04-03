@@ -573,6 +573,7 @@
                 const { data: { session } } = await supabase_client.auth.getSession();
                 const parentUnitId = sessionStorage.getItem('userId');
 
+                // Step 1: Call manage-student to create student and get credentials
                 const { data, error } = await supabase_client.functions.invoke('manage-student', {
                     body: { 
                         action: 'create_student', 
@@ -586,11 +587,29 @@
 
                 if (error || (data && data.error)) throw new Error(data?.error || error?.message || 'Enrollment failed');
 
+                // Step 2: Create auth user using edge function
+                try {
+                    const createUserResponse = await supabase_client.functions.invoke('create-student-user', {
+                        body: { 
+                            full_name: fullName,
+                            student_code: data.student_code,
+                            unit_code: data.unit_code || 'UNIT001'
+                        },
+                        headers: { Authorization: `Bearer ${session.access_token}` }
+                    });
+
+                    if (!createUserResponse.error && createUserResponse.data?.success) {
+                        console.log('Auth user created successfully for student');
+                    }
+                } catch (authErr) {
+                    console.warn('Warning: Could not auto-create auth user, but student record created:', authErr);
+                }
+
                 // Show success view
                 document.getElementById('enroll-form-view').style.display = 'none';
                 document.getElementById('enroll-success-view').style.display = 'block';
                 document.getElementById('enroll-creds-output').innerText = 
-                    `Username: ${data.email}\nPassword: ${data.password}\nStudent ID: ${data.student_code}`;
+                    `✅ Student Enrolled!\n\nStudent ID: ${data.student_code}\nUsername: ${data.email}\nPassword: ${data.password}\n\n(Auth user created automatically)`;
 
             } catch (err) {
                 console.error('Enrollment error:', err);
