@@ -168,9 +168,6 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-6">
-                    <div class="text-right">
-                        <p id="display-name" class="text-2xl font-black text-gray-900">--</p>
-                    </div>
                     <button onclick="logout()" class="px-6 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-all">
                         Logout
                     </button>
@@ -370,7 +367,7 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Center Code</label>
                     <input type="text" id="uf-center-code" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600 uppercase" placeholder="e.g., MH238" required>
-                    <p class="text-xs text-gray-500 mt-1">Username will be: centercode@ucmas.in</p>
+                    <p class="text-xs text-gray-500 mt-1">Username will be: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4e2d2b203a2b3c2d212a2b0e3b2d232f3d602720">[email&#160;protected]</a></p>
                 </div>
 
                 <div>
@@ -380,7 +377,7 @@
 
                 <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
                     <p class="text-xs font-bold text-blue-700">Auto-Generated Details:</p>
-                    <p class="text-xs text-blue-600 mt-2">Email: <span id="generated-email" class="font-mono font-bold">centercode@ucmas.in</span></p>
+                    <p class="text-xs text-blue-600 mt-2">Email: <span id="generated-email" class="font-mono font-bold"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bcdfd9d2c8d9cedfd3d8d9fcc9dfd1ddcf92d5d2">[email&#160;protected]</a></span></p>
                     <p class="text-xs text-blue-600">Password: <span class="font-mono font-bold">Welcome@123</span></p>
                 </div>
                 
@@ -396,7 +393,7 @@
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // Initialize Supabase Client - MUMBAI CONFIGURATION
         const supabase_client = supabase.createClient(
             'https://offdxndcnsiejmwdznwb.supabase.co',
@@ -408,11 +405,11 @@
             try {
                 await supabase_client.auth.signOut();
                 sessionStorage.clear();
-                window.location.href = 'index.html';
+                window.location.href = 'index-mumbai.html';
             } catch (error) {
                 console.error('Logout error:', error);
                 sessionStorage.clear();
-                window.location.href = 'index.html';
+                window.location.href = 'index-mumbai.html';
             }
         }
 
@@ -815,21 +812,37 @@
             const password = 'Welcome@123';
             
             try {
-                // Insert new UF directly into the table
+                // Step 1: Call Edge Function to create auth user
+                const { data: { session } } = await supabase_client.auth.getSession();
+                
+                const createUserResponse = await supabase_client.functions.invoke('create-uf-user', {
+                    body: { 
+                        full_name: name,
+                        center_code: centerCode.toUpperCase(),
+                        city: city
+                    },
+                    headers: { Authorization: `Bearer ${session?.access_token}` }
+                });
+
+                if (createUserResponse.error || !createUserResponse.data?.success) {
+                    throw new Error(createUserResponse.error?.message || createUserResponse.data?.error || 'Failed to create auth user');
+                }
+
+                // Step 2: Add to unit_franchisees table
                 const { data, error } = await supabase_client
                     .from('unit_franchisees')
                     .insert([{
                         full_name: name,
                         email: email,
                         password: password,
-                        state: 'Maharashtra',  // Default state for Mumbai
+                        state: 'Maharashtra',
                         region: city,
                         is_active: true
                     }]);
                 
                 if (error) throw error;
                 
-                alert(`✅ Unit Franchisee added successfully!\n\nUsername: ${email}\nPassword: ${password}`);
+                alert(`✅ Unit Franchisee added successfully!\n\nEmail: ${email}\nPassword: ${password}\n\nAuth user created automatically!`);
                 closeAddUFModal();
                 await loadAllData();
             } catch (err) {
@@ -848,15 +861,3 @@
             background: rgba(255,255,255,0.08);
             backdrop-filter: blur(10px);
             border-top: 1px solid rgba(255,255,255,0.15);
-            color: rgba(255,255,255,0.7);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            letter-spacing: 0.5px;
-        ">
-            © 2026 Developed by <span style="
-            color: #fff;
-            font-weight: 700;
-            ">Practice Buddy</span>. All rights reserved.
-        </footer>
-</body>
-</html>
