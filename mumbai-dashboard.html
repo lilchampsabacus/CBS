@@ -162,14 +162,13 @@
                     <div class="flex items-center gap-4 mb-2">
                         <div class="h-16 w-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg">U</div>
                         <div>
-                            <h1 class="text-4xl font-black text-gray-900 tracking-tight">ABACUS 2.0</h1>
+                            <h1 class="text-4xl font-black text-gray-900 tracking-tight">CBS Education</h1>
                             <p class="text-sm font-bold text-purple-600 uppercase tracking-wider">UCMAS Mumbai Command Center</p>
                         </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-6">
                     <div class="text-right">
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Mumbai Regional Head</p>
                         <p id="display-name" class="text-2xl font-black text-gray-900">--</p>
                     </div>
                     <button onclick="logout()" class="px-6 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-all">
@@ -216,9 +215,14 @@
             <div class="glass-card rounded-3xl p-8 mb-8">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-black text-gray-900">Unit Franchisees</h2>
-                    <button onclick="exportToCSV('uf')" class="export-btn">
-                        📥 Export to CSV
-                    </button>
+                    <div class="flex gap-4">
+                        <button onclick="openAddUFModal()" class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl hover:shadow-lg transition-all">
+                            + Add New UF
+                        </button>
+                        <button onclick="exportToCSV('uf')" class="export-btn">
+                            📥 Export to CSV
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Filters -->
@@ -238,10 +242,10 @@
                         <thead>
                             <tr class="bg-gradient-to-r from-indigo-50 to-purple-50 border-b-2 border-gray-200">
                                 <th class="text-left px-6 py-4 font-black text-gray-700 cursor-pointer" onclick="sortTable('uf', 'full_name')">Name ↕</th>
+                                <th class="text-left px-6 py-4 font-black text-gray-700">Center Code</th>
                                 <th class="text-left px-6 py-4 font-black text-gray-700">Email</th>
                                 <th class="text-left px-6 py-4 font-black text-gray-700">Password</th>
-                                <th class="text-left px-6 py-4 font-black text-gray-700 cursor-pointer" onclick="sortTable('uf', 'state')">State ↕</th>
-                                <th class="text-left px-6 py-4 font-black text-gray-700">Region</th>
+                                <th class="text-left px-6 py-4 font-black text-gray-700">City</th>
                                 <th class="text-center px-6 py-4 font-black text-gray-700">Status</th>
                                 <th class="text-center px-6 py-4 font-black text-gray-700">Actions</th>
                             </tr>
@@ -351,12 +355,66 @@
         </div>
     </div>
 
+    <!-- Add New UF Modal -->
+    <div id="addUFModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="glass-card rounded-3xl p-8 max-w-md w-full">
+            <h2 class="text-2xl font-black text-gray-900 mb-2">Add New Unit Franchisee</h2>
+            <p class="text-sm text-gray-600 mb-6">Username & password auto-generated</p>
+            
+            <form id="add-uf-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
+                    <input type="text" id="uf-name" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600" placeholder="e.g., Raj Kumar" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Center Code</label>
+                    <input type="text" id="uf-center-code" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600 uppercase" placeholder="e.g., MH238" required>
+                    <p class="text-xs text-gray-500 mt-1">Username will be: centercode@ucmas.in</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">City</label>
+                    <input type="text" id="uf-city" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600" placeholder="e.g., Mumbai" required>
+                </div>
+
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                    <p class="text-xs font-bold text-blue-700">Auto-Generated Details:</p>
+                    <p class="text-xs text-blue-600 mt-2">Email: <span id="generated-email" class="font-mono font-bold">centercode@ucmas.in</span></p>
+                    <p class="text-xs text-blue-600">Password: <span class="font-mono font-bold">Welcome@123</span></p>
+                </div>
+                
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-lg hover:shadow-lg transition-all">
+                        Add UF
+                    </button>
+                    <button type="button" onclick="closeAddUFModal()" class="flex-1 px-6 py-3 bg-gray-300 text-gray-800 font-bold rounded-lg hover:bg-gray-400 transition-all">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Initialize Supabase Client - MUMBAI CONFIGURATION
         const supabase_client = supabase.createClient(
             'https://offdxndcnsiejmwdznwb.supabase.co',
             'sb_publishable_2nb0HWCrTlZ3RvyHDn5Rmg_yUoz6xBW'
         );
+
+        // Logout function
+        async function logout() {
+            try {
+                await supabase_client.auth.signOut();
+                sessionStorage.clear();
+                window.location.href = 'index-mumbai.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                sessionStorage.clear();
+                window.location.href = 'index-mumbai.html';
+            }
+        }
 
         // Data store
         const dataStore = {
@@ -486,13 +544,13 @@
                         html += `
                             <tr class="border-b border-gray-200">
                                 <td class="px-6 py-4 font-semibold text-gray-900">${item.full_name}</td>
+                                <td class="px-6 py-4 font-mono text-gray-700 font-bold">${item.email.split('@')[0].toUpperCase()}</td>
                                 <td class="px-6 py-4 text-gray-700">${item.email}</td>
                                 <td class="px-6 py-4">
                                     <span class="password-field mono text-xs bg-gray-100 px-3 py-2 rounded cursor-pointer" onclick="togglePassword(this)">
                                         ${item.password}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-gray-700">${item.state || '-'}</td>
                                 <td class="px-6 py-4 text-gray-700">${item.region || '-'}</td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="status-toggle ${isActive ? 'active' : ''}" onclick="toggleStatus('${item.id}', ${isActive}, 'uf')"></div>
@@ -694,6 +752,23 @@
             document.getElementById('editModal').classList.add('hidden');
         }
 
+        // Open Add UF Modal
+        function openAddUFModal() {
+            document.getElementById('addUFModal').classList.remove('hidden');
+            // Add real-time email generation as user types
+            document.getElementById('uf-center-code').addEventListener('input', function() {
+                const centerCode = this.value.toLowerCase();
+                const email = centerCode ? `${centerCode}@ucmas.in` : 'centercode@ucmas.in';
+                document.getElementById('generated-email').textContent = email;
+            });
+        }
+
+        // Close Add UF Modal
+        function closeAddUFModal() {
+            document.getElementById('addUFModal').classList.add('hidden');
+            document.getElementById('add-uf-form').reset();
+        }
+
         // Edit form submission
         document.getElementById('edit-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -724,6 +799,42 @@
             } catch (err) {
                 console.error('Error updating user:', err);
                 alert('Failed to update user: ' + err.message);
+            }
+        });
+
+        // Add UF form submission
+        document.getElementById('add-uf-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('uf-name').value;
+            const centerCode = document.getElementById('uf-center-code').value.toLowerCase();
+            const city = document.getElementById('uf-city').value;
+            
+            // Auto-generate email and password
+            const email = `${centerCode}@ucmas.in`;
+            const password = 'Welcome@123';
+            
+            try {
+                // Insert new UF directly into the table
+                const { data, error } = await supabase_client
+                    .from('unit_franchisees')
+                    .insert([{
+                        full_name: name,
+                        email: email,
+                        password: password,
+                        state: 'Maharashtra',  // Default state for Mumbai
+                        region: city,
+                        is_active: true
+                    }]);
+                
+                if (error) throw error;
+                
+                alert(`✅ Unit Franchisee added successfully!\n\nUsername: ${email}\nPassword: ${password}`);
+                closeAddUFModal();
+                await loadAllData();
+            } catch (err) {
+                console.error('Error adding UF:', err);
+                alert('❌ Failed to add UF: ' + err.message);
             }
         });
 
