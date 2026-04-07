@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UCMAS Mumbai - Regional Command Center (Updated)</title>
+    <title>UCMAS Mumbai - Regional Command Center</title>
 
     <script>
         if (sessionStorage.getItem('userRole') !== 'mumbai_ho') {
@@ -125,6 +125,18 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
         }
+
+        .modal { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0, 0, 0, 0.5); 
+            backdrop-filter: blur(8px);
+            z-index: 100; 
+            align-items: center; 
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
     </style>
 </head>
 <body class="min-h-screen p-8">
@@ -140,7 +152,7 @@
                         <div class="h-16 w-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg">U</div>
                         <div>
                             <h1 class="text-4xl font-black text-gray-900 tracking-tight">CBS Education</h1>
-                            <p class="text-sm font-bold text-purple-600 uppercase tracking-wider">UCMAS Mumbai Command Center (Updated)</p>
+                            <p class="text-sm font-bold text-purple-600 uppercase tracking-wider">UCMAS Mumbai Command Center</p>
                         </div>
                     </div>
                 </div>
@@ -270,11 +282,6 @@
                         <option value="3">Level 3</option>
                         <option value="4">Level 4</option>
                         <option value="5">Level 5</option>
-                        <option value="6">Level 6</option>
-                        <option value="7">Level 7</option>
-                        <option value="8">Level 8</option>
-                        <option value="9">Level 9</option>
-                        <option value="10">Level 10</option>
                     </select>
                     <select id="filter-students-age" class="filter-select" onchange="applyAdvancedFilter('age', this.value)">
                         <option value="">All Ages</option>
@@ -299,14 +306,13 @@
                                 <th class="text-left px-6 py-4 font-black text-gray-700">Student ID</th>
                                 <th class="text-left px-6 py-4 font-black text-gray-700">Unit Code</th>
                                 <th class="text-left px-6 py-4 font-black text-gray-700">Level</th>
-                                <th class="text-left px-6 py-4 font-black text-gray-700">Age</th>
                                 <th class="text-center px-6 py-4 font-black text-gray-700">Repeated</th>
                                 <th class="text-center px-6 py-4 font-black text-gray-700">Status</th>
                             </tr>
                         </thead>
                         <tbody id="table-students">
                             <tr class="text-center py-8">
-                                <td colspan="7" class="py-8 text-gray-500">Loading...</td>
+                                <td colspan="6" class="py-8 text-gray-500">Loading...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -378,9 +384,57 @@
         </div>
     </div>
 
+    <!-- ============================================ -->
+    <!-- EDIT UF MODAL -->
+    <!-- ============================================ -->
+    <div id="editUFModal" class="modal">
+        <div class="glass-card rounded-3xl p-8 max-w-md w-full m-4">
+            <h2 class="text-2xl font-black text-gray-900 mb-2">Edit Unit Franchisee</h2>
+            <p class="text-sm text-gray-600 mb-6">Update UF information</p>
+            
+            <form id="edit-uf-form" class="space-y-4">
+                <input type="hidden" id="edit-uf-id">
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
+                    <input type="text" id="edit-uf-name" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Email</label>
+                    <input type="email" id="edit-uf-email" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Class</label>
+                    <select id="edit-uf-class" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600">
+                        <option value="">No Change</option>
+                        <option value="A">Class A</option>
+                        <option value="B">Class B</option>
+                        <option value="C">Class C</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">City/Region</label>
+                    <input type="text" id="edit-uf-region" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600">
+                </div>
+                
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg transition-all">
+                        Save Changes
+                    </button>
+                    <button type="button" onclick="closeEditUFModal()" class="flex-1 px-6 py-3 bg-gray-300 text-gray-800 font-bold rounded-lg hover:bg-gray-400 transition-all">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Add New UF Modal -->
-    <div id="addUFModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="glass-card rounded-3xl p-8 max-w-md w-full">
+    <div id="addUFModal" class="modal">
+        <div class="glass-card rounded-3xl p-8 max-w-md w-full m-4">
             <h2 class="text-2xl font-black text-gray-900 mb-2">Add New Unit Franchisee</h2>
             <p class="text-sm text-gray-600 mb-6">Select class and auto-generated credentials will be shown</p>
             
@@ -430,7 +484,7 @@
     </div>
 
     <script>
-        // Initialize Supabase Client - MUMBAI CONFIGURATION
+        // Initialize Supabase Client
         const supabase_client = supabase.createClient(
             'https://offdxndcnsiejmwdznwb.supabase.co',
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mZmR4bmRjbnNpZWptd2R6bndiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxOTcyNTcsImV4cCI6MjA5MDc3MzI1N30.OqbIuZHgqcChiN4RTSTY55DKczzRO-4fVBIb0JuOxhU'
@@ -475,8 +529,6 @@
         // Load all data
         async function loadAllData() {
             try {
-                const { data: { session } } = await supabase_client.auth.getSession();
-
                 // Load Unit Franchisees
                 const { data: ufData } = await supabase_client
                     .from('unit_franchisees')
@@ -488,9 +540,8 @@
 
                 // Load Students
                 const { data: studentData } = await supabase_client
-                    .from('profiles')
+                    .from('students')
                     .select('*')
-                    .eq('role', 'student')
                     .order('created_at', { ascending: false });
 
                 dataStore.students = studentData || [];
@@ -498,9 +549,8 @@
 
                 // Load Dropouts
                 const { data: dropoutData } = await supabase_client
-                    .from('profiles')
+                    .from('students')
                     .select('*')
-                    .eq('role', 'student')
                     .eq('is_active', false)
                     .not('dropout_reason', 'is', null);
 
@@ -569,7 +619,7 @@
         // Apply advanced filters
         function applyAdvancedFilter(type, value) {
             if (type === 'level' && value) {
-                filteredData.students = dataStore.students.filter(s => s.current_level === parseInt(value));
+                filteredData.students = dataStore.students.filter(s => s.current_level === value);
             } else if (type === 'age' && value) {
                 const today = new Date();
                 const [minAge, maxAge] = value === '5-8' ? [5, 8] : 
@@ -624,14 +674,12 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-gray-700">${item.region || '-'}</td>
-                            <td class="px-6 py-4 text-center font-bold">${dataStore.students.filter(s => s.current_unit_id === item.id && s.is_active !== false).length}</td>
+                            <td class="px-6 py-4 text-center font-bold">${dataStore.students.filter(s => s.unit_id === item.id && s.is_active !== false).length}</td>
                             <td class="px-6 py-4 text-center">
                                 <div class="status-toggle ${isActive ? 'active' : ''}" onclick="toggleStatus('${item.id}', ${isActive}, 'uf')"></div>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <button onclick="openEditModal('${item.id}', 'unit_franchisee')" class="action-btn edit-btn">
-                                    Edit
-                                </button>
+                                <button class="action-btn edit-btn" onclick="openEditUFModal('${item.id}')">Edit</button>
                             </td>
                         </tr>
                     `;
@@ -654,10 +702,9 @@
                             <td class="px-6 py-4 font-semibold text-gray-900">${item.full_name}</td>
                             <td class="px-6 py-4 text-gray-700">${item.student_code}</td>
                             <td class="px-6 py-4 text-gray-700">
-                                ${dataStore.uf.find(u => u.id === item.current_unit_id)?.email.split('@')[0].toUpperCase() || '-'}
+                                ${dataStore.uf.find(u => u.id === item.unit_id)?.email.split('@')[0].toUpperCase() || '-'}
                             </td>
-                            <td class="px-6 py-4 text-gray-700 font-bold">Level ${item.current_level || 0}</td>
-                            <td class="px-6 py-4 text-gray-700">${age} years</td>
+                            <td class="px-6 py-4 text-gray-700 font-bold">${item.current_level || 0}</td>
                             <td class="px-6 py-4 text-center">
                                 ${item.is_repeated ? '<span class="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold">Repeated</span>' : '<span class="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold">New</span>'}
                             </td>
@@ -669,7 +716,7 @@
                 }).join('');
             } else if (tab === 'dropouts') {
                 html = data.map(item => {
-                    const ufName = dataStore.uf.find(u => u.id === item.current_unit_id)?.full_name || 'Unknown';
+                    const ufName = dataStore.uf.find(u => u.id === item.unit_id)?.full_name || 'Unknown';
                     const enrollDate = new Date(item.created_at).toLocaleDateString();
                     
                     return `
@@ -677,7 +724,7 @@
                             <td class="px-6 py-4 font-semibold text-gray-900">${item.full_name}</td>
                             <td class="px-6 py-4 text-gray-700">${item.student_code}</td>
                             <td class="px-6 py-4 text-gray-700">${ufName}</td>
-                            <td class="px-6 py-4 text-center font-bold">Level ${item.dropout_level || 0}</td>
+                            <td class="px-6 py-4 text-center font-bold">${item.dropout_level || 0}</td>
                             <td class="px-6 py-4 text-gray-700">
                                 <span class="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
                                     ${item.dropout_reason || 'Not Specified'}
@@ -708,9 +755,9 @@
                     csv += `"${item.full_name}","${item.email}","${item.email.split('@')[0]}","${item.uf_class || '--'}","${item.region}","${item.is_active !== false ? 'Active' : 'Inactive'}"\n`;
                 });
             } else if (tab === 'students') {
-                csv = 'Full Name,Student ID,Level,Age,Repeated,Status\n';
+                csv = 'Full Name,Student ID,Level,Repeated,Status\n';
                 data.forEach(item => {
-                    csv += `"${item.full_name}","${item.student_code}","${item.current_level}","--","${item.is_repeated ? 'Yes' : 'No'}","${item.is_active !== false ? 'Active' : 'Inactive'}"\n`;
+                    csv += `"${item.full_name}","${item.student_code}","${item.current_level}","${item.is_repeated ? 'Yes' : 'No'}","${item.is_active !== false ? 'Active' : 'Inactive'}"\n`;
                 });
             } else if (tab === 'dropouts') {
                 csv = 'Full Name,Student ID,Unit,Dropout Level,Reason,Enrollment Date\n';
@@ -759,9 +806,74 @@
             }
         }
 
+        // ============================================
+        // EDIT UF MODAL FUNCTIONS
+        // ============================================
+
+        // Open Edit UF Modal
+        function openEditUFModal(ufId) {
+            const uf = dataStore.uf.find(u => u.id === ufId);
+            if (!uf) return;
+            
+            document.getElementById('edit-uf-id').value = ufId;
+            document.getElementById('edit-uf-name').value = uf.full_name || '';
+            document.getElementById('edit-uf-email').value = uf.email || '';
+            document.getElementById('edit-uf-class').value = uf.uf_class || '';
+            document.getElementById('edit-uf-region').value = uf.region || '';
+            
+            document.getElementById('editUFModal').classList.add('active');
+        }
+
+        // Close Edit UF Modal
+        function closeEditUFModal() {
+            document.getElementById('editUFModal').classList.remove('active');
+            document.getElementById('edit-uf-form').reset();
+        }
+
+        // Edit UF Form Submission
+        document.getElementById('edit-uf-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const ufId = document.getElementById('edit-uf-id').value;
+            const name = document.getElementById('edit-uf-name').value;
+            const email = document.getElementById('edit-uf-email').value;
+            const ufClass = document.getElementById('edit-uf-class').value;
+            const region = document.getElementById('edit-uf-region').value;
+
+            try {
+                const { data: { session } } = await supabase_client.auth.getSession();
+
+                const { data, error } = await supabase_client.functions.invoke('update-uf', {
+                    body: { 
+                        uf_id: ufId,
+                        full_name: name,
+                        email: email,
+                        uf_class: ufClass || undefined,
+                        region: region || undefined
+                    },
+                    headers: { Authorization: `Bearer ${session?.access_token}` }
+                });
+
+                if (error || (data && data.error)) {
+                    throw new Error(data?.error || error?.message || 'Update failed');
+                }
+
+                alert('✅ UF updated successfully!');
+                closeEditUFModal();
+                await loadAllData();
+            } catch (err) {
+                console.error('Error updating UF:', err);
+                alert('❌ Failed to update UF: ' + err.message);
+            }
+        });
+
+        // ============================================
+        // ADD NEW UF MODAL FUNCTIONS
+        // ============================================
+
         // Open Add UF Modal
         function openAddUFModal() {
-            document.getElementById('addUFModal').classList.remove('hidden');
+            document.getElementById('addUFModal').classList.add('active');
             
             document.getElementById('uf-center-code').addEventListener('input', function() {
                 const centerCode = this.value.toLowerCase();
@@ -776,7 +888,7 @@
 
         // Close Add UF Modal
         function closeAddUFModal() {
-            document.getElementById('addUFModal').classList.add('hidden');
+            document.getElementById('addUFModal').classList.remove('active');
             document.getElementById('add-uf-form').reset();
         }
 
@@ -820,19 +932,6 @@
             }
         });
 
-        // Open Edit Modal
-        function openEditModal(userId, role) {
-            let user = null;
-            if (role === 'unit_franchisee') {
-                user = dataStore.uf.find(u => u.id === userId);
-            }
-            
-            if (!user) return;
-            
-            // Show basic editing capability
-            alert(`Edit functionality for ${user.full_name}\nEmail: ${user.email}\n\nThis can be extended with a full modal form.`);
-        }
-
         // Initialize on load
         init();
     </script>
@@ -848,7 +947,7 @@
             font-size: 13px;
             letter-spacing: 0.5px;
         ">
-            © 2026 Developed by <span style="color: #fff; font-weight: 700;">Practice Buddy</span>. All rights reserved. | Updated with Advanced Features
+            © 2026 Developed by <span style="color: #fff; font-weight: 700;">Practice Buddy</span>. All rights reserved. | Mumbai Dashboard Updated with Edit Modal
         </footer>
 </body>
 </html>
