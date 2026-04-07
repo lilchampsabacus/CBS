@@ -22,16 +22,11 @@
             font-family: 'Nunito', sans-serif;
             min-height: 100vh;
             margin: 0;
-            /* Base white background */
             background-color: #ffffff;
-            /* Multi-layer gradient matching the Franchise Meet theme */
             background-image: 
-                /* Subtle technical grid overlay */
                 linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px),
-                /* Top-Right Indigo/Blue Glow */
                 radial-gradient(circle at 100% 0%, #1a2a7b 0%, rgba(26, 42, 123, 0.4) 30%, transparent 70%),
-                /* Bottom-Left Vibrant Red Glow */
                 radial-gradient(circle at 0% 100%, #e31e24 0%, rgba(227, 30, 36, 0.3) 30%, transparent 70%);
             background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
             background-attachment: fixed;
@@ -43,6 +38,29 @@
             border: 1px solid rgba(255, 255, 255, 0.5); 
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
+        
+        .tab-button {
+            transition: all 0.3s;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .tab-button.active {
+            background: linear-gradient(135deg, #2E3192 0%, #667eea 100%);
+            color: white;
+        }
+        .tab-button:not(.active) {
+            color: #666;
+        }
+        .tab-button:hover:not(.active) {
+            background: rgba(46, 49, 146, 0.1);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         .status-toggle { 
             position: relative; 
@@ -77,7 +95,7 @@
         
         table { border-collapse: separate; border-spacing: 0; }
         tbody tr { transition: all 0.2s; }
-        tbody tr:hover { background: #f9fafb; transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        tbody tr:hover { background: #f9fafb; transform: scale(1.01); }
         
         .action-btn {
             padding: 6px 16px;
@@ -92,6 +110,8 @@
         .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .edit-btn { background: #3b82f6; color: white; }
         .edit-btn:hover { background: #2563eb; }
+        .danger-btn { background: #ef4444; color: white; }
+        .danger-btn:hover { background: #dc2626; }
         
         .search-box {
             background: white;
@@ -104,8 +124,8 @@
         }
         .search-box:focus { 
             outline: none; 
-            border-color: #667eea; 
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #2E3192; 
+            box-shadow: 0 0 0 3px rgba(46, 49, 146, 0.1);
         }
         
         .stat-card {
@@ -115,11 +135,6 @@
             transition: all 0.3s;
         }
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
-        
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         .modal { 
             display: none; 
@@ -132,6 +147,41 @@
             justify-content: center;
         }
         .modal.active { display: flex; }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-grid.full { grid-template-columns: 1fr; }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #2E3192;
+            box-shadow: 0 0 0 3px rgba(46, 49, 146, 0.1);
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .section-header {
+            background: linear-gradient(135deg, #2E3192 0%, #667eea 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px 16px 0 0;
+            margin: 0;
+        }
     </style>
 </head>
 <body class="min-h-screen p-8">
@@ -165,190 +215,588 @@
         </header>
 
         <!-- Stats Dashboard -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="stat-card border-l-4 border-green-500">
                 <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Active Students</p>
                 <h3 id="stat-students" class="text-4xl font-black text-gray-900">0</h3>
             </div>
             <div class="stat-card border-l-4 border-blue-500">
-                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Total Enrolled</p>
-                <h3 id="stat-total" class="text-4xl font-black text-gray-900">0</h3>
+                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Active Batches</p>
+                <h3 id="stat-batches" class="text-4xl font-black text-gray-900">0</h3>
+            </div>
+            <div class="stat-card border-l-4 border-orange-500">
+                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Course Instructors</p>
+                <h3 id="stat-ci" class="text-4xl font-black text-gray-900">0</h3>
             </div>
             <div class="stat-card border-l-4 border-purple-500">
-                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Center Status</p>
-                <h3 class="text-2xl font-black text-purple-600">Active</h3>
+                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Total Revenue</p>
+                <h3 id="stat-revenue" class="text-4xl font-black text-gray-900">₹0</h3>
             </div>
         </div>
 
-        <!-- Students Table -->
-        <div class="glass-card rounded-3xl overflow-hidden">
-            <div class="p-8 border-b border-gray-200 flex justify-between items-center flex-wrap gap-4">
-                <h2 class="text-2xl font-black text-gray-900">Student Directory</h2>
-                <div class="flex gap-4 items-center flex-wrap">
-                    <input type="text" id="search-students" placeholder="Search by name, ID, email..." class="search-box w-80" onkeyup="searchStudents()">
-                    <button onclick="openTransferModal()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold rounded-xl hover:shadow-lg transition-all">
-                        🔄 Transfer In
-                    </button>
-                    <button onclick="openEnrollModal()" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl hover:shadow-lg transition-all">
+        <!-- Tabs Navigation -->
+        <div class="glass-card rounded-3xl p-6 mb-8">
+            <div class="flex gap-3 flex-wrap">
+                <button class="tab-button active" onclick="switchTab('students')">
+                    👥 Students
+                </button>
+                <button class="tab-button" onclick="switchTab('batches')">
+                    📚 Batches
+                </button>
+                <button class="tab-button" onclick="switchTab('ci')">
+                    🎓 Course Instructors
+                </button>
+                <button class="tab-button" onclick="switchTab('payments')">
+                    💳 Payment Tracker
+                </button>
+                <button class="tab-button" onclick="switchTab('fees')">
+                    ⚙️ Fee Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== STUDENTS TAB ===== -->
+        <div id="content-students" class="tab-content active">
+            <div class="glass-card rounded-3xl overflow-hidden">
+                <div class="section-header flex justify-between items-center">
+                    <h2 class="text-2xl font-black">Student Directory</h2>
+                    <button onclick="openEnrollModal()" class="px-6 py-3 bg-white text-purple-600 font-bold rounded-xl hover:bg-gray-100 transition-all">
                         ✨ Enroll Student
                     </button>
                 </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50 text-xs font-black text-gray-500 uppercase tracking-wider">
-                        <tr>
-                            <th class="px-8 py-5 text-left">Full Name</th>
-                            <th class="px-8 py-5 text-left">Student ID</th>
-                            <th class="px-8 py-5 text-left">Username (Email)</th>
-                            <th class="px-8 py-5 text-left">Password</th>
-                            <th class="px-8 py-5 text-left">Level</th>
-                            <th class="px-8 py-5 text-center">Status</th>
-                            <th class="px-8 py-5 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-students" class="divide-y divide-gray-100"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Student Modal -->
-    <div id="editModal" class="modal">
-        <div class="bg-white rounded-3xl overflow-hidden max-w-2xl w-full m-4">
-            <div class="p-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex justify-between items-center">
-                <div>
-                    <h3 class="text-3xl font-black">Edit Student</h3>
-                    <p class="text-indigo-100 text-sm font-semibold mt-1">Update student information</p>
+                <div class="p-8">
+                    <input type="text" id="search-students" placeholder="Search by name, ID, email..." class="search-box w-full mb-6" onkeyup="searchStudents()">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 text-xs font-black text-gray-500 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-4 text-left">Full Name</th>
+                                    <th class="px-6 py-4 text-left">Student ID</th>
+                                    <th class="px-6 py-4 text-left">Email</th>
+                                    <th class="px-6 py-4 text-left">Standard</th>
+                                    <th class="px-6 py-4 text-left">Level</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-students" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
                 </div>
-                <button onclick="closeModal('editModal')" class="text-3xl hover:bg-white hover:bg-opacity-20 w-12 h-12 rounded-xl transition">×</button>
-            </div>
-            <div class="p-8">
-                <form id="edit-form">
-                    <input type="hidden" id="edit-user-id">
-                    
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Full Name</label>
-                        <input type="text" id="edit-name" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Username (Email)</label>
-                        <input type="email" id="edit-email" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold mono" required>
-                    </div>
-                    
-                    <div class="mb-8">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">New Password (leave blank to keep current)</label>
-                        <input type="text" id="edit-password" placeholder="Enter new password" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold mono">
-                    </div>
-                    
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
-                        Save Changes
-                    </button>
-                </form>
             </div>
         </div>
+
+        <!-- ===== BATCHES TAB ===== -->
+        <div id="content-batches" class="tab-content">
+            <div class="glass-card rounded-3xl overflow-hidden">
+                <div class="section-header flex justify-between items-center">
+                    <h2 class="text-2xl font-black">Batch Management</h2>
+                    <button onclick="openCreateBatchModal()" class="px-6 py-3 bg-white text-purple-600 font-bold rounded-xl hover:bg-gray-100 transition-all">
+                        + Create Batch
+                    </button>
+                </div>
+                <div class="p-8">
+                    <input type="text" id="search-batches" placeholder="Search by batch name or CI..." class="search-box w-full mb-6" onkeyup="searchBatches()">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 text-xs font-black text-gray-500 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-4 text-left">Batch Name</th>
+                                    <th class="px-6 py-4 text-left">CI Name</th>
+                                    <th class="px-6 py-4 text-left">Day & Time</th>
+                                    <th class="px-6 py-4 text-left">Level</th>
+                                    <th class="px-6 py-4 text-left">Students</th>
+                                    <th class="px-6 py-4 text-left">Duration</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-batches" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== COURSE INSTRUCTORS TAB ===== -->
+        <div id="content-ci" class="tab-content">
+            <div class="glass-card rounded-3xl overflow-hidden">
+                <div class="section-header flex justify-between items-center">
+                    <h2 class="text-2xl font-black">Course Instructors</h2>
+                    <button onclick="openAddCIModal()" class="px-6 py-3 bg-white text-purple-600 font-bold rounded-xl hover:bg-gray-100 transition-all">
+                        + Add CI
+                    </button>
+                </div>
+                <div class="p-8">
+                    <input type="text" id="search-ci" placeholder="Search by name or code..." class="search-box w-full mb-6" onkeyup="searchCI()">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 text-xs font-black text-gray-500 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-4 text-left">CI Name</th>
+                                    <th class="px-6 py-4 text-left">CI Code</th>
+                                    <th class="px-6 py-4 text-left">Email</th>
+                                    <th class="px-6 py-4 text-left">Mobile</th>
+                                    <th class="px-6 py-4 text-left">Batches Assigned</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-ci" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PAYMENT TRACKER TAB ===== -->
+        <div id="content-payments" class="tab-content">
+            <div class="glass-card rounded-3xl overflow-hidden">
+                <div class="section-header flex justify-between items-center">
+                    <h2 class="text-2xl font-black">Payment Tracker</h2>
+                    <a href="payment tracker.html" class="px-6 py-3 bg-white text-purple-600 font-bold rounded-xl hover:bg-gray-100 transition-all">
+                        → Open Payment Portal
+                    </a>
+                </div>
+                <div class="p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="glass-card p-6 rounded-2xl border-l-4 border-green-500">
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Total Collected</p>
+                            <h3 id="payment-collected" class="text-3xl font-black text-green-600">₹0</h3>
+                        </div>
+                        <div class="glass-card p-6 rounded-2xl border-l-4 border-amber-500">
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Pending Amount</p>
+                            <h3 id="payment-pending" class="text-3xl font-black text-amber-600">₹0</h3>
+                        </div>
+                        <div class="glass-card p-6 rounded-2xl border-l-4 border-blue-500">
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Recent Transactions</p>
+                            <h3 id="payment-recent" class="text-3xl font-black text-blue-600">0</h3>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-black text-gray-900 mb-4">Recent Payment History</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 text-xs font-black text-gray-500 uppercase tracking-wider">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left">Student Name</th>
+                                        <th class="px-6 py-4 text-left">Amount</th>
+                                        <th class="px-6 py-4 text-left">Payment Date</th>
+                                        <th class="px-6 py-4 text-left">Method</th>
+                                        <th class="px-6 py-4 text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-payments" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== FEE SETTINGS TAB (NEW) ===== -->
+        <div id="content-fees" class="tab-content">
+            <div class="glass-card rounded-3xl overflow-hidden">
+                <div class="section-header">
+                    <h2 class="text-2xl font-black">Fee Structure - Class A/B/C</h2>
+                    <p class="text-indigo-100 text-sm font-semibold mt-1">Configure fees for each parent class</p>
+                </div>
+                <div class="p-8">
+                    <div id="fee-settings-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                        <!-- Class A -->
+                        <div class="glass-card p-8 rounded-2xl border-l-4 border-purple-500">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-xl font-black text-gray-900">Class A</h3>
+                                <span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-black rounded-lg">Premium</span>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Monthly Fee (₹)</label>
+                                    <input type="number" id="fee-a-monthly" class="form-input" placeholder="1480" step="10">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Quarterly (3 months) (₹)</label>
+                                    <input type="number" id="fee-a-quarterly" class="form-input" placeholder="4440" step="10">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Half-Yearly (6 months) (₹)</label>
+                                    <input type="number" id="fee-a-halfyearly" class="form-input" placeholder="8880" step="10">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Yearly (12 months) (₹)</label>
+                                    <input type="number" id="fee-a-yearly" class="form-input" placeholder="17760" step="10">
+                                </div>
+                                <button onclick="saveFeeClass('A')" class="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold rounded-xl hover:shadow-lg transition-all">
+                                    Save Class A
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Class B -->
+                        <div class="glass-card p-8 rounded-2xl border-l-4 border-blue-500">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-xl font-black text-gray-900">Class B</h3>
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-black rounded-lg">Standard</span>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Monthly Fee (₹)</label>
+                                    <input type="number" id="fee-b-monthly" class="form-input" placeholder="1380" step="10">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Quarterly (3 months) (₹)</label>
+                                    <input type="number" id="fee-b-quarterly" class="form-input" placeholder="4140" step="10">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Half-Yearly (6 months) (₹)</label>
+                                    <input type="number" id="fee-b-halfyearly" class="form-input" placeholder="8280" step="10">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Yearly (12 months) (₹)</label>
+                                    <input type="number" id="fee-b-yearly" class="form-input" placeholder="16560" step="10">
+                                </div>
+                                <button onclick="saveFeeClass('B')" class="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl hover:shadow-lg transition-all">
+                                    Save Class B
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Class C -->
+                        <div class="glass-card p-8 rounded-2xl border-l-4 border-green-500">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-xl font-black text-gray-900">Class C</h3>
+                                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-black rounded-lg">Value</span>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Monthly Fee (₹)</label>
+                                    <input type="number" id="fee-c-monthly" class="form-input" placeholder="1180" step="10">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Quarterly (3 months) (₹)</label>
+                                    <input type="number" id="fee-c-quarterly" class="form-input" placeholder="3540" step="10">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Half-Yearly (6 months) (₹)</label>
+                                    <input type="number" id="fee-c-halfyearly" class="form-input" placeholder="7080" step="10">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-gray-700 mb-2">Yearly (12 months) (₹)</label>
+                                    <input type="number" id="fee-c-yearly" class="form-input" placeholder="14160" step="10">
+                                </div>
+                                <button onclick="saveFeeClass('C')" class="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold rounded-xl hover:shadow-lg transition-all">
+                                    Save Class C
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fee Summary Table -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-black text-gray-900 mb-4">Fee Summary</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 text-xs font-black text-gray-500 uppercase tracking-wider">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left">Class</th>
+                                        <th class="px-6 py-4 text-right">Monthly</th>
+                                        <th class="px-6 py-4 text-right">Quarterly</th>
+                                        <th class="px-6 py-4 text-right">Half-Yearly</th>
+                                        <th class="px-6 py-4 text-right">Yearly</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fee-summary-table" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Enroll Student Modal -->
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Enhanced Enroll Student Modal -->
     <div id="enrollModal" class="modal">
-        <div class="bg-white rounded-3xl overflow-hidden max-w-2xl w-full m-4">
-            <div class="p-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex justify-between items-center">
+        <div class="bg-white rounded-3xl overflow-hidden max-w-2xl w-full m-4 max-h-[90vh] overflow-y-auto">
+            <div class="section-header flex justify-between items-center sticky top-0">
                 <div>
                     <h3 class="text-3xl font-black">Enroll New Student</h3>
-                    <p class="text-indigo-100 text-sm font-semibold mt-1">Generate National Scholar ID</p>
+                    <p class="text-indigo-100 text-sm font-semibold mt-1">Complete enrollment details</p>
                 </div>
                 <button onclick="closeModal('enrollModal')" class="text-3xl hover:bg-white hover:bg-opacity-20 w-12 h-12 rounded-xl transition">×</button>
             </div>
-            
+
+            <div id="enroll-form-view" class="p-8">
+                <form id="enroll-form" class="space-y-6">
+                    <!-- Student Information -->
+                    <div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-4">Student Information</h4>
+                        <div class="form-grid">
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Full Name *</label>
+                                <input type="text" id="s-name" class="form-input" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Date of Birth *</label>
+                                <input type="date" id="s-dob" class="form-input" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Sex *</label>
+                                <select id="s-sex" class="form-input" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Email ID</label>
+                                <input type="email" id="s-email" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- School Information -->
+                    <div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-4">School Information</h4>
+                        <div class="form-grid">
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">School Name *</label>
+                                <input type="text" id="s-school" class="form-input" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Standard/Grade *</label>
+                                <input type="text" id="s-standard" class="form-input" placeholder="e.g., 5th, 6th" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parent Information -->
+                    <div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-4">Parent Information</h4>
+                        <div class="form-grid">
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Father's Name</label>
+                                <input type="text" id="s-father-name" class="form-input">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Father's Mobile</label>
+                                <input type="tel" id="s-father-mobile" class="form-input" placeholder="10 digit number">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Mother's Name</label>
+                                <input type="text" id="s-mother-name" class="form-input">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Mother's Mobile</label>
+                                <input type="tel" id="s-mother-mobile" class="form-input" placeholder="10 digit number">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-4">Address</h4>
+                        <div class="form-grid full">
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Address</label>
+                                <textarea id="s-address" class="form-input" rows="3" placeholder="Full residential address"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Starting Level & Parent Class -->
+                    <div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-4">Program Details</h4>
+                        <div class="form-grid">
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Starting Level *</label>
+                                <select id="s-level" class="form-input" required>
+                                    <option value="">Select Level</option>
+                                    <option value="1">Level 0 (Foundation)</option>
+                                    <option value="2">Level 1</option>
+                                    <option value="3">Level 2</option>
+                                    <option value="4">Level 3</option>
+                                    <option value="5">Level 4</option>
+                                    <option value="6">Level 5</option>
+                                    <option value="7">Level 7</option>
+                                    <option value="8">Level 8</option>
+                                    <option value="9">Level 9</option>
+                                    <option value="10">Level 10</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-700 mb-2">Parent Class *</label>
+                                <select id="s-class" class="form-input" required>
+                                    <option value="">Select Class</option>
+                                    <option value="A">Class A - Premium (₹1,480/mo)</option>
+                                    <option value="B">Class B - Standard (₹1,380/mo)</option>
+                                    <option value="C">Class C - Value (₹1,180/mo)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="enroll-btn" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
+                        Create Enrollment
+                    </button>
+                </form>
+            </div>
+
             <div id="enroll-success-view" style="display: none;" class="p-12 text-center">
                 <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-5xl mx-auto mb-6">✅</div>
                 <h4 class="text-3xl font-black text-gray-900 mb-3">Student Enrolled Successfully!</h4>
-                <p class="text-gray-600 font-semibold mb-8">Please provide these credentials to the student:</p>
+                <p class="text-gray-600 font-semibold mb-8">Student credentials have been generated</p>
                 <div class="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 mb-8">
                     <pre id="enroll-creds-output" class="mono text-sm font-bold text-purple-600 whitespace-pre-wrap"></pre>
                 </div>
-                <button onclick="window.location.reload()" class="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all">
+                <button onclick="location.reload()" class="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all">
                     Return to Dashboard
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Create Batch Modal -->
+    <div id="createBatchModal" class="modal">
+        <div class="bg-white rounded-3xl overflow-hidden max-w-2xl w-full m-4">
+            <div class="section-header flex justify-between items-center">
+                <div>
+                    <h3 class="text-3xl font-black">Create New Batch</h3>
+                    <p class="text-indigo-100 text-sm font-semibold mt-1">Set up batch schedule and assign CI</p>
+                </div>
+                <button onclick="closeModal('createBatchModal')" class="text-3xl hover:bg-white hover:bg-opacity-20 w-12 h-12 rounded-xl transition">×</button>
+            </div>
             
-            <div id="enroll-form-view" class="p-8">
-                <form id="enroll-form">
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Student Full Name</label>
-                        <input type="text" id="s-name" placeholder="Firstname Surname" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+            <div class="p-8">
+                <form id="create-batch-form" class="space-y-6">
+                    <div class="form-grid">
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">Batch Name *</label>
+                            <input type="text" id="b-name" class="form-input" placeholder="e.g., Batch A - Monday" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">Level *</label>
+                            <select id="b-level" class="form-input" required>
+                                <option value="">Select Level</option>
+                                <option value="1">Level 1</option>
+                                <option value="2">Level 2</option>
+                                <option value="3">Level 3</option>
+                                <option value="4">Level 4</option>
+                                <option value="5">Level 5</option>
+                            </select>
+                        </div>
                     </div>
-                    
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Date of Birth</label>
-                        <input type="date" id="s-dob" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+
+                    <div class="form-grid">
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">Course Instructor *</label>
+                            <select id="b-ci" class="form-input" required>
+                                <option value="">Select CI</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">Batch Day *</label>
+                            <select id="b-day" class="form-input" required>
+                                <option value="">Select Day</option>
+                                <option value="Monday">Monday</option>
+                                <option value="Tuesday">Tuesday</option>
+                                <option value="Wednesday">Wednesday</option>
+                                <option value="Thursday">Thursday</option>
+                                <option value="Friday">Friday</option>
+                                <option value="Saturday">Saturday</option>
+                                <option value="Sunday">Sunday</option>
+                            </select>
+                        </div>
                     </div>
-                    
-                    <div class="mb-8">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Starting Level</label>
-                        <select id="s-level" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold">
-                            <option value="1">Level 0 (Foundation)</option>
-                            <option value="2">Level 1</option>
-                            <option value="3">Level 2</option>
-                            <option value="4">Level 3</option>
-                            <option value="5">Level 4</option>
-                            <option value="6">Level 5</option>
-                            <option value="7">Level 7</option>
-                            <option value="8">Level 8</option>
-                            <option value="9">Level 9</option>
-                            <option value="10">Level 10</option>
-                        </select>
+
+                    <div class="form-grid">
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">Start Time *</label>
+                            <input type="time" id="b-start-time" class="form-input" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">End Time *</label>
+                            <input type="time" id="b-end-time" class="form-input" required>
+                        </div>
                     </div>
-                    
-                    <button type="submit" id="enroll-btn" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
-                        Generate ID & Enroll
+
+                    <div class="form-grid">
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">Start Date *</label>
+                            <input type="date" id="b-start-date" class="form-input" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">End Date *</label>
+                            <input type="date" id="b-end-date" class="form-input" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid full">
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">Select Students *</label>
+                            <select id="b-students" class="form-input" multiple required style="height: 150px;">
+                                <option value="">Select one or more students...</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-2">Hold Ctrl/Cmd to select multiple students</p>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
+                        Create Batch
                     </button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Transfer Student Modal -->
-    <div id="transferModal" class="modal">
+    <!-- Add Course Instructor Modal -->
+    <div id="addCIModal" class="modal">
         <div class="bg-white rounded-3xl overflow-hidden max-w-2xl w-full m-4">
-            <div class="p-8 bg-gradient-to-r from-amber-500 to-orange-600 text-white flex justify-between items-center">
+            <div class="section-header flex justify-between items-center">
                 <div>
-                    <h3 class="text-3xl font-black">Claim Transfer Student</h3>
-                    <p class="text-amber-100 text-sm font-semibold mt-1">Securely pull student to your center</p>
+                    <h3 class="text-3xl font-black">Add Course Instructor</h3>
+                    <p class="text-indigo-100 text-sm font-semibold mt-1">Register new CI</p>
                 </div>
-                <button onclick="closeModal('transferModal')" class="text-3xl hover:bg-white hover:bg-opacity-20 w-12 h-12 rounded-xl transition">×</button>
+                <button onclick="closeModal('addCIModal')" class="text-3xl hover:bg-white hover:bg-opacity-20 w-12 h-12 rounded-xl transition">×</button>
             </div>
             
-            <div id="transfer-success-view" style="display: none;" class="p-12 text-center">
-                <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-5xl mx-auto mb-6">✅</div>
-                <h4 class="text-3xl font-black text-gray-900 mb-3">Student Claimed Successfully!</h4>
-                <p id="transfer-success-message" class="text-gray-600 font-semibold mb-8">The student has been transferred to your center.</p>
-                <button onclick="window.location.reload()" class="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all">
-                    View Dashboard
-                </button>
-            </div>
-            
-            <div id="transfer-form-view" class="p-8">
-                <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 mb-8">
-                    <p class="text-amber-900 font-semibold text-sm leading-relaxed">
-                        <strong>Security Verification Required:</strong> Upon verification, this student's Current Unit will be updated to your center. Their practice history will be preserved.
-                    </p>
-                </div>
-                
-                <form id="transfer-form">
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">National Scholar ID</label>
-                        <input type="text" id="t-student-id" placeholder="e.g. KK20170001" style="text-transform: uppercase;" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-amber-500 focus:outline-none font-semibold mono" required>
+            <div class="p-8">
+                <form id="add-ci-form" class="space-y-6">
+                    <div class="form-grid">
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">CI Name *</label>
+                            <input type="text" id="ci-name" class="form-input" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">CI Code *</label>
+                            <input type="text" id="ci-code" class="form-input" placeholder="e.g., CI001" required>
+                        </div>
                     </div>
-                    
-                    <div class="mb-8">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Date of Birth (Security PIN)</label>
-                        <input type="date" id="t-dob" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-amber-500 focus:outline-none font-semibold" required>
+
+                    <div class="form-grid">
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">Email</label>
+                            <input type="email" id="ci-email" class="form-input">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">Mobile Number</label>
+                            <input type="tel" id="ci-phone" class="form-input" placeholder="10 digit number">
+                        </div>
                     </div>
-                    
-                    <button type="submit" id="transfer-btn" class="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
-                        Verify & Transfer In
+
+                    <div class="form-grid full">
+                        <div>
+                            <label class="block text-xs font-black text-gray-700 mb-2">Qualifications</label>
+                            <textarea id="ci-qualifications" class="form-input" rows="3" placeholder="Educational qualifications and certifications"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
+                        Add CI
                     </button>
                 </form>
             </div>
@@ -356,14 +804,17 @@
     </div>
 
     <script>
-        // Initialize Supabase - Mumbai Configuration
+        // Initialize Supabase
         const SUPABASE_URL = "https://offdxndcnsiejmwdznwb.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_2nb0HWCrTlZ3RvyHDn5Rmg_yUoz6xBW";
         const supabase_client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let allStudents = [];
+        let allBatches = [];
+        let allCI = [];
+        let allPayments = [];
 
-        // Logout Function
+        // Logout
         async function logout() {
             try {
                 await supabase_client.auth.signOut();
@@ -376,7 +827,7 @@
             }
         }
 
-        // Initialize Dashboard
+        // Initialize
         async function init() {
             const userEmail = sessionStorage.getItem('userEmail') || "unit@ucmas.in";
             const centerCode = userEmail.split('@')[0].toUpperCase();
@@ -385,199 +836,299 @@
             document.getElementById('display-center').innerText = centerCode;
             document.getElementById('display-name').innerText = userName;
             
-            await loadStudents();
+            await loadAllData();
         }
 
-        // Load Students
-        async function loadStudents() {
+        // Load all data
+        async function loadAllData() {
             try {
                 const unitId = sessionStorage.getItem('userId');
-                const { data, error } = await supabase_client
+                
+                // Load Students
+                const { data: students } = await supabase_client
                     .from('profiles')
                     .select('*')
                     .eq('role', 'student')
                     .eq('current_unit_id', unitId);
+                allStudents = students || [];
 
-                if (error) throw error;
+                // Load Course Instructors
+                const { data: ci } = await supabase_client
+                    .from('course_instructors')
+                    .select('*')
+                    .eq('unit_id', unitId);
+                allCI = ci || [];
 
-                allStudents = data || [];
-                const activeCount = allStudents.filter(s => s.is_active !== false).length;
-                document.getElementById('stat-students').innerText = activeCount;
-                document.getElementById('stat-total').innerText = allStudents.length;
+                // Load Batches
+                const { data: batches } = await supabase_client
+                    .from('batches')
+                    .select('*')
+                    .eq('unit_id', unitId);
+                allBatches = batches || [];
+
+                // Load Payments
+                const { data: payments } = await supabase_client
+                    .from('payments')
+                    .select('*')
+                    .eq('unit_id', unitId);
+                allPayments = payments || [];
+
+                updateStats();
                 renderStudents(allStudents);
+                renderBatches(allBatches);
+                renderCI(allCI);
+                renderPayments(allPayments);
+                populateCIDropdown();
+                populateStudentDropdown();
             } catch (err) {
-                console.error("Error loading students:", err);
-                alert("Failed to load students");
+                console.error("Error loading data:", err);
             }
         }
 
-        // Render Students Table
+        // Update Statistics
+        function updateStats() {
+            const activeStudents = allStudents.filter(s => s.is_active !== false).length;
+            const activeBatches = allBatches.filter(b => b.is_active !== false).length;
+            const totalRevenue = allPayments
+                .filter(p => p.status === 'completed')
+                .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+            document.getElementById('stat-students').innerText = activeStudents;
+            document.getElementById('stat-batches').innerText = activeBatches;
+            document.getElementById('stat-ci').innerText = allCI.length;
+            document.getElementById('stat-revenue').innerText = `₹${totalRevenue.toLocaleString()}`;
+
+            // Payment stats
+            const collected = allPayments
+                .filter(p => p.status === 'completed')
+                .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+            const pending = allPayments
+                .filter(p => p.status === 'pending')
+                .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+            const recent = allPayments.length;
+
+            document.getElementById('payment-collected').innerText = `₹${collected.toLocaleString()}`;
+            document.getElementById('payment-pending').innerText = `₹${pending.toLocaleString()}`;
+            document.getElementById('payment-recent').innerText = recent;
+        }
+
+        // Render Students
         function renderStudents(students) {
             const tbody = document.getElementById('table-students');
-            
             if (!students || students.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-8 py-16 text-center text-gray-400 font-semibold italic">No students enrolled yet. Click "Enroll Student" to get started.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-8 py-16 text-center text-gray-400 font-semibold">No students enrolled yet.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = students.map(student => `
                 <tr>
-                    <td class="px-8 py-5 font-bold text-gray-900">
-                        ${student.full_name || 'N/A'}
-                    </td>
-                    <td class="px-8 py-5">
-                        <span class="mono font-bold text-purple-600 text-sm">
-                            ${student.student_code || 'PROCESSING...'}
-                        </span>
-                        ${student.current_unit_id !== student.parent_unit_id ? 
-                            '<span class="ml-2 px-2 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-black uppercase">Transferred</span>' 
-                            : ''}
-                    </td>
-                    <td class="px-8 py-5">
-                        <span class="mono text-sm font-semibold text-gray-700">${student.email || 'N/A'}</span>
-                    </td>
-                    <td class="px-8 py-5">
-                        <span class="password-field mono text-sm font-bold text-gray-900 inline-block px-3 py-1 bg-gray-100 rounded-lg" onclick="togglePassword(this)">
-                            ${student.password || 'Welcome@123'}
-                        </span>
-                    </td>
-                    <td class="px-8 py-5 font-bold text-gray-700">Level ${student.current_level || 1}</td>
-                    <td class="px-8 py-5 text-center">
+                    <td class="px-6 py-4 font-bold text-gray-900">${student.full_name || 'N/A'}</td>
+                    <td class="px-6 py-4"><span class="mono font-bold text-purple-600">${student.student_code || '--'}</span></td>
+                    <td class="px-6 py-4 text-gray-700">${student.email || 'N/A'}</td>
+                    <td class="px-6 py-4 text-gray-700">${student.standard || '--'}</td>
+                    <td class="px-6 py-4 font-bold">Level ${student.current_level || 1}</td>
+                    <td class="px-6 py-4 text-center">
                         ${student.is_active !== false 
-                            ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-black uppercase">Active</span>' 
-                            : '<span class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-black uppercase">Inactive</span>'}
+                            ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-black">Active</span>' 
+                            : '<span class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-black">Inactive</span>'}
                     </td>
-                    <td class="px-8 py-5">
-                        <div class="flex gap-3 items-center justify-center">
-                            <button class="action-btn edit-btn" onclick="openEditModal('${student.id}')">Edit</button>
-                            <div class="status-toggle ${student.is_active !== false ? 'active' : ''}" 
-                                 onclick="toggleStatus('${student.id}', ${student.is_active !== false})"></div>
-                        </div>
+                    <td class="px-6 py-4 text-center">
+                        <button class="action-btn edit-btn" onclick="openEditStudentModal('${student.id}')">Edit</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // Search Functionality
+        // Render Batches
+        function renderBatches(batches) {
+            const tbody = document.getElementById('table-batches');
+            if (!batches || batches.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="px-8 py-16 text-center text-gray-400">No batches created yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = batches.map(batch => {
+                const ci = allCI.find(c => c.id === batch.ci_id);
+                const studentCount = allBatches.find(b => b.id === batch.id) ? '1' : '0';
+                return `
+                    <tr>
+                        <td class="px-6 py-4 font-bold text-gray-900">${batch.batch_name}</td>
+                        <td class="px-6 py-4">${ci?.ci_name || 'Unassigned'}</td>
+                        <td class="px-6 py-4">${batch.batch_day} (${batch.batch_time_start}-${batch.batch_time_end})</td>
+                        <td class="px-6 py-4 font-bold">${batch.level}</td>
+                        <td class="px-6 py-4 text-center">${studentCount}</td>
+                        <td class="px-6 py-4">${batch.start_date} to ${batch.end_date}</td>
+                        <td class="px-6 py-4 text-center">
+                            ${batch.is_active !== false 
+                                ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-black">Active</span>' 
+                                : '<span class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-black">Inactive</span>'}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <button class="action-btn edit-btn" onclick="editBatch('${batch.id}')">Edit</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Render CI
+        function renderCI(ci) {
+            const tbody = document.getElementById('table-ci');
+            if (!ci || ci.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-8 py-16 text-center text-gray-400">No CIs added yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = ci.map(instructor => {
+                const assignedBatches = allBatches.filter(b => b.ci_id === instructor.id).length;
+                return `
+                    <tr>
+                        <td class="px-6 py-4 font-bold text-gray-900">${instructor.ci_name}</td>
+                        <td class="px-6 py-4"><span class="mono font-bold">${instructor.ci_code}</span></td>
+                        <td class="px-6 py-4 text-gray-700">${instructor.email || '--'}</td>
+                        <td class="px-6 py-4 text-gray-700">${instructor.phone || '--'}</td>
+                        <td class="px-6 py-4 text-center font-bold">${assignedBatches}</td>
+                        <td class="px-6 py-4 text-center">
+                            ${instructor.is_active !== false 
+                                ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-black">Active</span>' 
+                                : '<span class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-black">Inactive</span>'}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <button class="action-btn edit-btn" onclick="editCI('${instructor.id}')">Edit</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Render Payments
+        function renderPayments(payments) {
+            const tbody = document.getElementById('table-payments');
+            const recent = payments.slice(0, 10);
+            
+            if (!recent || recent.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-8 py-16 text-center text-gray-400">No payments recorded yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = recent.map(payment => {
+                const student = allStudents.find(s => s.id === payment.student_id);
+                return `
+                    <tr>
+                        <td class="px-6 py-4 font-bold text-gray-900">${student?.full_name || 'Unknown'}</td>
+                        <td class="px-6 py-4 font-bold text-purple-600">₹${payment.amount}</td>
+                        <td class="px-6 py-4">${payment.payment_date}</td>
+                        <td class="px-6 py-4 text-gray-700">${payment.payment_method || '--'}</td>
+                        <td class="px-6 py-4 text-center">
+                            ${payment.status === 'completed'
+                                ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-black">Completed</span>'
+                                : '<span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs font-black">Pending</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Populate CI Dropdown
+        function populateCIDropdown() {
+            const select = document.getElementById('b-ci');
+            select.innerHTML = '<option value="">Select CI</option>';
+            allCI.forEach(ci => {
+                select.innerHTML += `<option value="${ci.id}">${ci.ci_name} (${ci.ci_code})</option>`;
+            });
+        }
+
+        // Populate Student Dropdown
+        function populateStudentDropdown() {
+            const select = document.getElementById('b-students');
+            const enrolled = allStudents.filter(s => !allBatches.some(b => b.id === s.batch_id));
+            
+            select.innerHTML = '<option value="">Select students...</option>';
+            enrolled.forEach(student => {
+                select.innerHTML += `<option value="${student.id}">${student.full_name} (${student.student_code})</option>`;
+            });
+        }
+
+        // Search functions
         function searchStudents() {
-            const searchTerm = document.getElementById('search-students').value.toLowerCase();
-            const filtered = allStudents.filter(student => 
-                student.full_name?.toLowerCase().includes(searchTerm) ||
-                student.student_code?.toLowerCase().includes(searchTerm) ||
-                student.email?.toLowerCase().includes(searchTerm)
+            const term = document.getElementById('search-students').value.toLowerCase();
+            const filtered = allStudents.filter(s => 
+                s.full_name?.toLowerCase().includes(term) ||
+                s.student_code?.toLowerCase().includes(term) ||
+                s.email?.toLowerCase().includes(term)
             );
             renderStudents(filtered);
         }
 
-        // Toggle Password Visibility
-        function togglePassword(element) {
-            element.classList.toggle('visible');
+        function searchBatches() {
+            const term = document.getElementById('search-batches').value.toLowerCase();
+            const filtered = allBatches.filter(b => {
+                const ci = allCI.find(c => c.id === b.ci_id);
+                return b.batch_name?.toLowerCase().includes(term) ||
+                       ci?.ci_name?.toLowerCase().includes(term);
+            });
+            renderBatches(filtered);
         }
 
-        // Toggle Status
-        async function toggleStatus(userId, currentStatus) {
-            const newStatus = !currentStatus;
-            try {
-                const { data: { session } } = await supabase_client.auth.getSession();
-
-                const { data, error } = await supabase_client.functions.invoke('manage-student', {
-                    body: { 
-                        action: 'toggle_status',
-                        user_id: userId,
-                        is_active: newStatus
-                    },
-                    headers: { Authorization: `Bearer ${session?.access_token}` }
-                });
-
-                if (error || (data && data.error)) {
-                    throw new Error(data?.error || error?.message || 'Toggle failed');
-                }
-                
-                await loadStudents();
-            } catch (err) {
-                console.error('Error toggling status:', err);
-                alert('Failed to update status');
-            }
+        function searchCI() {
+            const term = document.getElementById('search-ci').value.toLowerCase();
+            const filtered = allCI.filter(c => 
+                c.ci_name?.toLowerCase().includes(term) ||
+                c.ci_code?.toLowerCase().includes(term)
+            );
+            renderCI(filtered);
         }
 
-        // Open Edit Modal
-        function openEditModal(userId) {
-            const student = allStudents.find(s => s.id === userId);
-            if (!student) return;
-
-            document.getElementById('edit-user-id').value = userId;
-            document.getElementById('edit-name').value = student.full_name || '';
-            document.getElementById('edit-email').value = student.email || '';
-            document.getElementById('edit-password').value = '';
-            
-            document.getElementById('editModal').classList.add('active');
-        }
-
-        // Edit Form Submission
-        document.getElementById('edit-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const userId = document.getElementById('edit-user-id').value;
-            const name = document.getElementById('edit-name').value;
-            const email = document.getElementById('edit-email').value;
-            const password = document.getElementById('edit-password').value;
-
-            try {
-                const { data: { session } } = await supabase_client.auth.getSession();
-
-                const { data, error } = await supabase_client.functions.invoke('manage-student', {
-                    body: { 
-                        action: 'update_user',
-                        user_id: userId,
-                        full_name: name,
-                        email: email,
-                        password: password || undefined
-                    },
-                    headers: { Authorization: `Bearer ${session?.access_token}` }
-                });
-
-                if (error || (data && data.error)) {
-                    throw new Error(data?.error || error?.message || 'Update failed');
-                }
-
-                alert('Student updated successfully!');
-                closeModal('editModal');
-                await loadStudents();
-            } catch (err) {
-                console.error('Error updating student:', err);
-                alert('Failed to update student: ' + err.message);
-            }
-        });
-
-        // Modal Functions
+        // Modal functions
         function openEnrollModal() {
             document.getElementById('enrollModal').classList.add('active');
             document.getElementById('enroll-form-view').style.display = 'block';
             document.getElementById('enroll-success-view').style.display = 'none';
         }
 
-        function openTransferModal() {
-            document.getElementById('transferModal').classList.add('active');
-            document.getElementById('transfer-form-view').style.display = 'block';
-            document.getElementById('transfer-success-view').style.display = 'none';
+        function openCreateBatchModal() {
+            document.getElementById('createBatchModal').classList.add('active');
+            populateCIDropdown();
+            populateStudentDropdown();
+        }
+
+        function openAddCIModal() {
+            document.getElementById('addCIModal').classList.add('active');
         }
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
         }
 
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`content-${tab}`).classList.add('active');
+            document.querySelector(`button[onclick="switchTab('${tab}')"]`).classList.add('active');
+        }
+
         // Enroll Student Form
         document.getElementById('enroll-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('enroll-btn');
-            const fullName = document.getElementById('s-name').value.trim();
-            const dobValue = document.getElementById('s-dob').value;
-            const level = document.getElementById('s-level').value;
-
-            if (!fullName || !dobValue) {
-                alert("All fields are required.");
-                return;
-            }
+            
+            const studentData = {
+                full_name: document.getElementById('s-name').value,
+                date_of_birth: document.getElementById('s-dob').value,
+                sex: document.getElementById('s-sex').value,
+                email: document.getElementById('s-email').value,
+                school_name: document.getElementById('s-school').value,
+                standard: document.getElementById('s-standard').value,
+                father_name: document.getElementById('s-father-name').value,
+                father_mobile: document.getElementById('s-father-mobile').value,
+                mother_name: document.getElementById('s-mother-name').value,
+                mother_mobile: document.getElementById('s-mother-mobile').value,
+                address: document.getElementById('s-address').value,
+                current_level: document.getElementById('s-level').value,
+                parent_class: document.getElementById('s-class').value,
+            };
 
             btn.disabled = true;
             btn.innerText = "Creating Account...";
@@ -586,127 +1137,225 @@
                 const { data: { session } } = await supabase_client.auth.getSession();
                 const parentUnitId = sessionStorage.getItem('userId');
 
-                // Step 1: Call manage-student to create student and get credentials
                 const { data, error } = await supabase_client.functions.invoke('manage-student', {
                     body: { 
-                        action: 'create_student', 
-                        full_name: fullName,
-                        date_of_birth: dobValue,
-                        current_level: level,
+                        action: 'create_student',
+                        ...studentData,
                         parent_unit_id: parentUnitId
                     },
                     headers: { Authorization: `Bearer ${session.access_token}` }
                 });
 
-                if (error || (data && data.error)) throw new Error(data?.error || error?.message || 'Enrollment failed');
+                if (error || (data && data.error)) throw new Error(data?.error || error?.message);
 
-                // Step 2: Create auth user using edge function
-                try {
-                    const createUserResponse = await supabase_client.functions.invoke('create-student-user', {
-                        body: { 
-                            full_name: fullName,
-                            student_code: data.student_code,
-                            unit_code: data.unit_code || 'UNIT001'
-                        },
-                        headers: { Authorization: `Bearer ${session.access_token}` }
-                    });
-
-                    if (!createUserResponse.error && createUserResponse.data?.success) {
-                        console.log('Auth user created successfully for student');
-                    }
-                } catch (authErr) {
-                    console.warn('Warning: Could not auto-create auth user, but student record created:', authErr);
-                }
-
-                // Show success view
                 document.getElementById('enroll-form-view').style.display = 'none';
                 document.getElementById('enroll-success-view').style.display = 'block';
                 document.getElementById('enroll-creds-output').innerText = 
-                    `✅ Student Enrolled!\n\nStudent ID: ${data.student_code}\nUsername: ${data.email}\nPassword: ${data.password}\n\n(Auth user created automatically)`;
+                    `✅ Student Enrolled!\n\nStudent ID: ${data.student_code}\nUsername: ${data.email}\nPassword: ${data.password}`;
 
+                setTimeout(() => location.reload(), 3000);
             } catch (err) {
                 console.error('Enrollment error:', err);
-                const errorMsg = err.message || 'Unknown error occurred';
-                alert("Enrollment Error: " + errorMsg);
+                alert("Error: " + err.message);
                 btn.disabled = false;
-                btn.innerText = "Generate ID & Enroll";
+                btn.innerText = "Create Enrollment";
             }
         });
 
-        // Transfer Student Form
-        document.getElementById('transfer-form').addEventListener('submit', async (e) => {
+        // Create Batch Form
+        document.getElementById('create-batch-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('transfer-btn');
-            const studentCode = document.getElementById('t-student-id').value.trim();
-            const dobValue = document.getElementById('t-dob').value;
-
-            if (!studentCode || !dobValue) {
-                alert("Both fields are required for verification.");
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerText = "Verifying & Claiming...";
+            
+            const batchData = {
+                batch_name: document.getElementById('b-name').value,
+                ci_id: document.getElementById('b-ci').value,
+                level: document.getElementById('b-level').value,
+                batch_day: document.getElementById('b-day').value,
+                batch_time_start: document.getElementById('b-start-time').value,
+                batch_time_end: document.getElementById('b-end-time').value,
+                start_date: document.getElementById('b-start-date').value,
+                end_date: document.getElementById('b-end-date').value,
+                student_ids: Array.from(document.getElementById('b-students').selectedOptions).map(o => o.value)
+            };
 
             try {
-                const currentUnitId = sessionStorage.getItem('userId');
-                const { data: { session }, error: sessionError } = await supabase_client.auth.getSession();
+                const { data: { session } } = await supabase_client.auth.getSession();
+                const unitId = sessionStorage.getItem('userId');
 
-                if (sessionError || !session) {
-                    throw new Error('Session expired. Please login again.');
-                }
-
-                const { data, error } = await supabase_client.functions.invoke('manage-student', {
+                const { data, error } = await supabase_client.functions.invoke('manage-batch', {
                     body: { 
-                        action: 'transfer_student', 
-                        student_code: studentCode,
-                        date_of_birth: dobValue,
-                        current_unit_id: currentUnitId
+                        action: 'create_batch',
+                        unit_id: unitId,
+                        ...batchData
                     },
                     headers: { Authorization: `Bearer ${session.access_token}` }
                 });
 
-                if (error) {
-                    console.error('Edge function error:', error);
-                    throw new Error(error.message || 'Transfer failed');
-                }
+                if (error || (data && data.error)) throw new Error(data?.error || error?.message);
 
-                if (data && data.error) {
-                    throw new Error(data.error);
-                }
-
-                // Show success view
-                document.getElementById('transfer-form-view').style.display = 'none';
-                document.getElementById('transfer-success-view').style.display = 'block';
-                document.getElementById('transfer-success-message').innerText = data.message || 'Student transferred successfully!';
-
+                alert('✅ Batch created successfully!');
+                closeModal('createBatchModal');
+                await loadAllData();
             } catch (err) {
-                console.error('Transfer error:', err);
-                alert("Transfer Error: " + (err.message || 'Unknown error'));
-                btn.disabled = false;
-                btn.innerText = "Verify & Transfer In";
+                console.error('Batch creation error:', err);
+                alert("Error: " + err.message);
             }
         });
 
-        // Initialize on page load
+        // Add CI Form
+        document.getElementById('add-ci-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const ciData = {
+                ci_name: document.getElementById('ci-name').value,
+                ci_code: document.getElementById('ci-code').value,
+                email: document.getElementById('ci-email').value,
+                phone: document.getElementById('ci-phone').value,
+                qualifications: document.getElementById('ci-qualifications').value
+            };
+
+            try {
+                const { data: { session } } = await supabase_client.auth.getSession();
+                const unitId = sessionStorage.getItem('userId');
+
+                const { error } = await supabase_client
+                    .from('course_instructors')
+                    .insert([{ unit_id: unitId, ...ciData, is_active: true }]);
+
+                if (error) throw error;
+
+                alert('✅ CI added successfully!');
+                closeModal('addCIModal');
+                document.getElementById('add-ci-form').reset();
+                await loadAllData();
+            } catch (err) {
+                console.error('CI creation error:', err);
+                alert("Error: " + err.message);
+            }
+        });
+
+        // Placeholder functions for edit operations
+        function openEditStudentModal(id) {
+            alert('Edit student modal - implement as needed');
+        }
+
+        function editBatch(id) {
+            alert('Edit batch modal - implement as needed');
+        }
+
+        function editCI(id) {
+            alert('Edit CI modal - implement as needed');
+        }
+
+        // ===== FEE SETTINGS FUNCTIONS (NEW) =====
+
+        // Load Fee Structure
+        async function loadFeeSettings() {
+            try {
+                const { data } = await supabase_client
+                    .from('center_config')
+                    .select('*')
+                    .single();
+
+                if (data) {
+                    // Load Class A fees
+                    document.getElementById('fee-a-monthly').value = data.class_a_monthly || 1480;
+                    document.getElementById('fee-a-quarterly').value = data.class_a_quarterly || 4440;
+                    document.getElementById('fee-a-halfyearly').value = data.class_a_halfyearly || 8880;
+                    document.getElementById('fee-a-yearly').value = data.class_a_yearly || 17760;
+
+                    // Load Class B fees
+                    document.getElementById('fee-b-monthly').value = data.class_b_monthly || 1380;
+                    document.getElementById('fee-b-quarterly').value = data.class_b_quarterly || 4140;
+                    document.getElementById('fee-b-halfyearly').value = data.class_b_halfyearly || 8280;
+                    document.getElementById('fee-b-yearly').value = data.class_b_yearly || 16560;
+
+                    // Load Class C fees
+                    document.getElementById('fee-c-monthly').value = data.class_c_monthly || 1180;
+                    document.getElementById('fee-c-quarterly').value = data.class_c_quarterly || 3540;
+                    document.getElementById('fee-c-halfyearly').value = data.class_c_halfyearly || 7080;
+                    document.getElementById('fee-c-yearly').value = data.class_c_yearly || 14160;
+
+                    renderFeeSummary(data);
+                }
+            } catch (err) {
+                console.error('Load fee settings error:', err);
+            }
+        }
+
+        // Save Fee Settings for a Class
+        async function saveFeeClass(classType) {
+            const monthly = parseFloat(document.getElementById(`fee-${classType.toLowerCase()}-monthly`).value);
+            const quarterly = parseFloat(document.getElementById(`fee-${classType.toLowerCase()}-quarterly`).value);
+            const halfyearly = parseFloat(document.getElementById(`fee-${classType.toLowerCase()}-halfyearly`).value);
+            const yearly = parseFloat(document.getElementById(`fee-${classType.toLowerCase()}-yearly`).value);
+
+            if (!monthly || !quarterly || !halfyearly || !yearly) {
+                alert('Please fill all fields for Class ' + classType);
+                return;
+            }
+
+            try {
+                const fieldMap = {
+                    'A': { m: 'class_a_monthly', q: 'class_a_quarterly', h: 'class_a_halfyearly', y: 'class_a_yearly' },
+                    'B': { m: 'class_b_monthly', q: 'class_b_quarterly', h: 'class_b_halfyearly', y: 'class_b_yearly' },
+                    'C': { m: 'class_c_monthly', q: 'class_c_quarterly', h: 'class_c_halfyearly', y: 'class_c_yearly' }
+                };
+
+                const fields = fieldMap[classType];
+                const updateData = {
+                    [fields.m]: monthly,
+                    [fields.q]: quarterly,
+                    [fields.h]: halfyearly,
+                    [fields.y]: yearly
+                };
+
+                const { data: configData } = await supabase_client.from('center_config').select('id').single();
+                
+                const { error } = await supabase_client
+                    .from('center_config')
+                    .update(updateData)
+                    .eq('id', configData.id);
+
+                if (error) throw error;
+
+                alert(`✅ Class ${classType} fees updated successfully!`);
+                await loadFeeSettings();
+            } catch (err) {
+                console.error('Save fee error:', err);
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // Render Fee Summary Table
+        function renderFeeSummary(config) {
+            const tbody = document.getElementById('fee-summary-table');
+            
+            const fees = [
+                { class: 'A', monthly: config.class_a_monthly, quarterly: config.class_a_quarterly, half: config.class_a_halfyearly, yearly: config.class_a_yearly },
+                { class: 'B', monthly: config.class_b_monthly, quarterly: config.class_b_quarterly, half: config.class_b_halfyearly, yearly: config.class_b_yearly },
+                { class: 'C', monthly: config.class_c_monthly, quarterly: config.class_c_quarterly, half: config.class_c_halfyearly, yearly: config.class_c_yearly }
+            ];
+
+            tbody.innerHTML = fees.map(f => `
+                <tr>
+                    <td class="px-6 py-4 font-bold text-gray-900">Class ${f.class}</td>
+                    <td class="px-6 py-4 text-right">₹${f.monthly.toLocaleString()}</td>
+                    <td class="px-6 py-4 text-right">₹${f.quarterly.toLocaleString()}</td>
+                    <td class="px-6 py-4 text-right">₹${f.half.toLocaleString()}</td>
+                    <td class="px-6 py-4 text-right font-bold text-purple-600">₹${f.yearly.toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Initialize
         init();
+        // Load fees when tab is clicked
+        setTimeout(() => loadFeeSettings(), 1000);
     </script>
-    <footer style="
-            text-align: center;
-            padding: 18px 20px;
-            margin-top: 40px;
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.15);
-            color: rgba(255,255,255,0.7);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            letter-spacing: 0.5px;
-        ">
-            © 2026 Developed by <span style="
-            color: #fff;
-            font-weight: 700;
-            ">Practice Buddy</span>. All rights reserved.
-        </footer>
+
+    <footer style="text-align: center; padding: 18px 20px; margin-top: 40px; background: rgba(255,255,255,0.08); backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.15); color: rgba(0,0,0,0.6); font-family: 'DM Sans', sans-serif; font-size: 13px; letter-spacing: 0.5px;">
+        © 2026 Developed by <span style="color: #2E3192; font-weight: 700;">Practice Buddy</span>. All rights reserved.
+    </footer>
 </body>
 </html>
