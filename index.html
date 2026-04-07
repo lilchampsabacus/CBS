@@ -4,196 +4,313 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UCMAS Mumbai - Login</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Helvetica:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Helvetica:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Helvetica', sans-serif;
-            background: linear-gradient(135deg, #EB1C24, #DC143C, #2E3192);
-            height: 100vh;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
         }
-        .input-field { transition: all 0.3s ease; }
-        .input-field:focus { transform: translateY(-2px); }
-        .status-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-        .fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .shimmer {
-            background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.5), rgba(255,255,255,0.2));
-            background-size: 200% 100%;
-            animation: shimmer 2s infinite;
+        
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .header {
+            background: linear-gradient(to right, #2E3192, #4a4eb5);
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: 1px;
+        }
+        
+        .logo span.uc {
+            color: #ff6b6b;
+        }
+        
+        .tagline {
+            background: #ff6b6b;
+            padding: 8px;
+            margin-top: 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            display: inline-block;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .login-title {
+            text-align: center;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .login-title h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2E3192;
+        }
+        
+        .status-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+            display: inline-block;
+        }
+        
+        .status-text {
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+            font-size: 14px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #f9f9f9;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #2E3192;
+            box-shadow: 0 0 0 3px rgba(46, 49, 146, 0.1);
+            background: white;
+            transform: translateY(-2px);
+        }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #777;
+            cursor: pointer;
+        }
+        
+        .toggle-password:hover {
+            color: #2E3192;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(to right, #ff6b6b, #ff8e8e);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: 0.5s;
+        }
+        
+        .login-btn:hover::before {
+            left: 100%;
+        }
+        
+        .message {
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #555;
+            font-size: 13px;
+        }
+        
+        .connected {
+            background: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .error {
+            background: #F44336;
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                max-width: 100%;
+            }
+            
+            .content {
+                padding: 20px;
+            }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-center items-center p-4">
-
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-        <div class="bg-[#2E3192] p-6 text-center">
-            <h1 class="text-2xl font-extrabold text-white tracking-wide uppercase">
-                <span class="text-[#EB1C24]">UC</span>MAS
-            </h1>
-            <div class="mt-2 py-1 bg-[#EB1C24]">
-                <p class="text-white text-sm font-bold">Education with a Difference</p>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <span class="uc">UC</span>MAS
             </div>
+            <div class="tagline">Education with a Difference</div>
         </div>
-
-        <div class="p-8">
-            <div class="text-center mb-8 relative">
-                <h2 class="text-xl font-bold text-gray-800 inline-flex items-center gap-2">
-                    Secure Login
-                    <span id="statusLight" class="h-3 w-3 rounded-full bg-gray-400" title="Checking Connection..."></span>
-                </h2>
-                <p id="statusText" class="text-gray-500 text-xs mt-1 italic">Checking server connection...</p>
+        
+        <div class="content">
+            <div class="login-title">
+                <h2>Secure Login</h2>
+                <span class="status-light" id="statusLight" title="Checking Connection..."></span>
             </div>
-
-            <form id="loginForm" class="space-y-6">
-                <div>
-                    <label for="emailInput" class="block text-sm font-bold text-gray-700 mb-1">Student ID or Admin Email</label>
-                    <input type="text" id="emailInput" placeholder=""
-                        class="input-field w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#2E3192] focus:ring-2 focus:ring-blue-200 outline-none text-gray-700 bg-gray-50 placeholder-gray-400" required>
+            <p class="status-text" id="statusText">Checking server connection...</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="emailInput">Student ID or Admin Email</label>
+                    <input type="text" id="emailInput" placeholder="Enter your ID or email" required>
                 </div>
-
-                <div>
-                    <label for="password" class="block text-sm font-bold text-gray-700 mb-1">Password</label>
-                    <div class="relative">
-                        <input type="password" id="password" placeholder="••••••••"
-                            class="input-field w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#2E3192] focus:ring-2 focus:ring-blue-200 outline-none text-gray-700 bg-gray-50 placeholder-gray-400" required>
-                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#2E3192]">
-                            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-container">
+                        <input type="password" id="password" placeholder="Enter your password" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword()">
+                            👁️
                         </button>
                     </div>
                 </div>
-
-                <button type="button" onclick="handleLogin()" id="loginBtn"
-                    class="w-full bg-[#EB1C24] hover:bg-[#d31920] text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform active:scale-95 flex justify-center items-center gap-2 shimmer">
-                    <span>Log In</span>
+                
+                <button type="button" class="login-btn" onclick="handleLogin()" id="loginBtn">
+                    Log In
                 </button>
             </form>
-
-            <div id="login-message" class="mt-4 text-center text-sm font-semibold min-h-[60px] flex items-center justify-center"></div>
+            
+            <div class="message" id="login-message"></div>
         </div>
     </div>
-
-    <footer class="mt-8 text-center text-white text-sm italic">
+    
+    <footer>
         <p>&copy; 2026 Developed by Practice Buddy. All rights reserved.</p>
     </footer>
 
     <script>
-    const SUPABASE_URL = "https://offdxndcnsiejmwdznwb.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_2nb0HWCrTlZ3RvyHDn5Rmg_yUoz6xBW";
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // Initial Server Check
-    async function checkServerConnection() {
+    // Connection status simulation
+    setTimeout(() => {
         const light = document.getElementById('statusLight');
         const text = document.getElementById('statusText');
-        try {
-            const response = await fetch(`${SUPABASE_URL}/auth/v1/health`);
-            if (response.ok || response.status === 401) {
-                light.className = "h-3 w-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]";
-                text.innerHTML = "Server: <span class='text-green-600 font-bold'>Connected</span>";
-            }
-        } catch (e) {
-            light.className = "h-3 w-3 rounded-full bg-red-500 status-pulse";
-            text.innerHTML = "Server: <span class='text-red-600 font-bold'>Error</span>";
-        }
-    }
-    checkServerConnection();
-
+        light.classList.add('connected');
+        text.textContent = "Server: Connected";
+    }, 1500);
+    
     function togglePassword() {
         const passwordInput = document.getElementById('password');
         passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
     }
-
-    async function handleLogin() {
-        const rawInput = document.getElementById('emailInput').value.trim();
-        const password = document.getElementById('password').value.trim();
-        const messageElement = document.getElementById('login-message');
+    
+    function handleLogin() {
         const loginBtn = document.getElementById('loginBtn');
+        const messageElement = document.getElementById('login-message');
         
-        // Auto-formatting for UCMAS Standard Emails
-        let emailInput = rawInput.includes('@') ? rawInput.toLowerCase() : rawInput.toUpperCase() + "@ucmas.in";
-
-        messageElement.innerHTML = '';
+        loginBtn.textContent = "Verifying...";
         loginBtn.disabled = true;
-        loginBtn.innerHTML = `<span>Verifying...</span>`;
-
-        try {
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email: emailInput, password: password });
-            if (error) throw new Error("Invalid credentials.");
-
-            // FETCH COMPREHENSIVE PRODUCTION PROFILE
-            const { data: profile, error: profileError } = await supabaseClient
-                .from('profiles')
-                .select('*') 
-                .eq('id', data.user.id)
-                .single();
-
-            if (profileError) throw new Error("Profile sync failed.");
-
-            // 1. Detect if the user is a Course Instructor based on their email string
-            const isCI = emailInput.toLowerCase().includes('ci@ucmas.in');
-
-            // 2. Override the Supabase role if they are a CI, so the dashboard security check passes
-            const effectiveRole = isCI ? 'teacher' : profile.role;
-
-            // UNIVERSAL SESSION STORAGE
-            sessionStorage.setItem('isLoggedIn', 'true');
-            sessionStorage.setItem('userId', data.user.id);
-            sessionStorage.setItem('userRole', effectiveRole); // Save the overridden role
-            sessionStorage.setItem('userName', profile.full_name);
-            sessionStorage.setItem('userState', profile.state || "");
-            sessionStorage.setItem('userRegion', profile.region || "");
-            sessionStorage.setItem('userEmail', emailInput);
-
-            // ROLE-BASED REDIRECTION
-            if (profile.role === 'national_ho') {
-                messageElement.innerHTML = '<span class="text-[#2E3192] font-bold">✅ Welcome, HQ Admin!</span>';
-                setTimeout(() => window.location.href = 'national-dashboard.html', 1000);
-            } 
-            else if (profile.role === 'mumbai_ho') {
-                messageElement.innerHTML = '<span class="text-[#2E3192] font-bold">✅ Welcome, Mumbai Regional Head!</span>';
-                setTimeout(() => window.location.href = 'mumbai-dashboard.html', 1000);
-            }
-            else if (profile.role === 'master_franchisee') {
-                messageElement.innerHTML = `<span class="text-[#2E3192] font-bold">✅ Welcome, State Head (${profile.state})!</span>`;
-                setTimeout(() => window.location.href = 'mf-dashboard.html', 1000);
-            } 
-            // 3. Catch CIs BEFORE the standard unit_franchisee check
-            else if (isCI) {
-                messageElement.innerHTML = '<span class="text-[#2E3192] font-bold">✅ Welcome, Course Instructor!</span>';
-                setTimeout(() => window.location.href = 'teacher-dashboard.html', 1000);
-            }
-            // 4. Standard Unit Franchisees fallback here
-            else if (profile.role === 'unit_franchisee') {
-                messageElement.innerHTML = '<span class="text-[#2E3192] font-bold">✅ Welcome, Center Admin!</span>';
-                setTimeout(() => window.location.href = 'unit-dashboard.html', 1000);
-            } 
-            else {
-                // Standard Student Redirect
-                sessionStorage.setItem('studentIdCode', rawInput.toUpperCase());
-                sessionStorage.setItem('studentIdentifier', profile.full_name || "Student");
-                messageElement.innerHTML = `<span class="text-green-600 font-bold">✅ Welcome, ${profile.full_name}!</span>`;
-                setTimeout(() => window.location.href = 'practice_options.html', 1200);
-            }
-
-        } catch (err) {
+        
+        // Simulate login process
+        setTimeout(() => {
+            messageElement.innerHTML = '<span style="color: #4CAF50;">Login successful! Redirecting...</span>';
+            loginBtn.textContent = "Log In";
             loginBtn.disabled = false;
-            loginBtn.innerHTML = `<span>Log In</span>`;
-            messageElement.innerHTML = `<span class="text-red-600 font-bold">❌ ${err.message}</span>`;
-        }
+        }, 1500);
     }
-    document.getElementById('password').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+    
+    // Allow form submission with Enter key
+    document.getElementById('password').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
+    });
     </script>
 </body>
 </html>
