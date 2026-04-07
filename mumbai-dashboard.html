@@ -418,11 +418,11 @@
             try {
                 await supabase_client.auth.signOut();
                 sessionStorage.clear();
-                window.location.href = 'index-mumbai.html';
+                window.location.href = 'index.html';
             } catch (error) {
                 console.error('Logout error:', error);
                 sessionStorage.clear();
-                window.location.href = 'index-mumbai.html';
+                window.location.href = 'index.html';
             }
         }
 
