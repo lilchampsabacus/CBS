@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UCMAS Mumbai - Unit Franchisee Dashboard</title>
+    <title>CBS Education - Unit Franchisee Dashboard</title>
 
     <script>
-        // Production Security Gatekeeper
         const role = sessionStorage.getItem('userRole');
         if (role !== 'unit_franchisee') {
             window.location.replace('index.html'); 
@@ -14,850 +13,1389 @@
     </script>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        :root {
+            --blue: #2E3192;
+            --red: #EB1C24;
+            --blue-light: rgba(46,49,146,0.08);
+            --red-light: rgba(235,28,36,0.08);
+        }
+        * { box-sizing: border-box; }
         body { 
-            font-family: 'Nunito', sans-serif;
+            font-family: 'DM Sans', sans-serif;
             min-height: 100vh;
             margin: 0;
-            /* Base white background */
-            background-color: #ffffff;
-            /* Multi-layer gradient matching the Franchise Meet theme */
+            background-color: #f8f9fc;
             background-image: 
-                /* Subtle technical grid overlay */
-                linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px),
-                /* Top-Right Indigo/Blue Glow */
-                radial-gradient(circle at 100% 0%, #1a2a7b 0%, rgba(26, 42, 123, 0.4) 30%, transparent 70%),
-                /* Bottom-Left Vibrant Red Glow */
-                radial-gradient(circle at 0% 100%, #e31e24 0%, rgba(227, 30, 36, 0.3) 30%, transparent 70%);
-            background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+                linear-gradient(rgba(46,49,146,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(46,49,146,0.025) 1px, transparent 1px),
+                radial-gradient(ellipse at 95% 5%, rgba(46,49,146,0.18) 0%, transparent 55%),
+                radial-gradient(ellipse at 5% 95%, rgba(235,28,36,0.15) 0%, transparent 55%);
+            background-size: 36px 36px, 36px 36px, 100% 100%, 100% 100%;
             background-attachment: fixed;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.95); 
+        
+        .glass { 
+            background: rgba(255,255,255,0.96); 
             backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255, 255, 255, 0.5); 
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255,255,255,0.7); 
+            box-shadow: 0 4px 24px rgba(46,49,146,0.07), 0 1px 4px rgba(0,0,0,0.05);
         }
-        
-        .status-toggle { 
-            position: relative; 
-            width: 50px; 
-            height: 26px; 
-            background: #e5e7eb; 
-            border-radius: 13px; 
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .status-toggle.active { background: #10b981; }
-        .status-toggle::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: white;
-            top: 3px;
-            left: 3px;
-            transition: transform 0.3s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        .status-toggle.active::after { transform: translateX(24px); }
-        
-        .password-field { 
-            filter: blur(4px); 
-            transition: filter 0.3s;
-            cursor: pointer;
-        }
-        .password-field.visible { filter: blur(0); }
-        
-        table { border-collapse: separate; border-spacing: 0; }
-        tbody tr { transition: all 0.2s; }
-        tbody tr:hover { background: #f9fafb; transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        
-        .action-btn {
-            padding: 6px 16px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .edit-btn { background: #3b82f6; color: white; }
-        .edit-btn:hover { background: #2563eb; }
-        
-        .search-box {
-            background: white;
-            border: 2px solid #e5e7eb;
+
+        /* TAB SYSTEM */
+        .tab-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tab-btn {
+            padding: 10px 22px;
             border-radius: 12px;
-            padding: 12px 20px;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s;
+            font-size: 13px;
+            font-weight: 700;
+            color: #6b7280;
+            background: transparent;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.22s;
+            letter-spacing: 0.2px;
         }
-        .search-box:focus { 
-            outline: none; 
-            border-color: #667eea; 
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        .tab-btn:hover { background: var(--blue-light); color: var(--blue); }
+        .tab-btn.active { 
+            background: var(--blue); 
+            color: white; 
+            border-color: var(--blue);
+            box-shadow: 0 4px 14px rgba(46,49,146,0.3);
         }
-        
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fadeUp 0.3s ease; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+        /* STAT CARDS */
         .stat-card {
             background: white;
-            border-radius: 20px;
-            padding: 24px;
-            transition: all 0.3s;
+            border-radius: 18px;
+            padding: 22px 26px;
+            border-left: 4px solid transparent;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
-        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
-        
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .modal { 
-            display: none; 
-            background: rgba(0, 0, 0, 0.6); 
-            backdrop-filter: blur(8px); 
-            position: fixed; 
-            inset: 0; 
-            z-index: 100; 
-            align-items: center; 
-            justify-content: center;
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
+
+        /* TABLE */
+        table { border-collapse: separate; border-spacing: 0; width: 100%; }
+        thead th { background: #f8f9fc; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #9ca3af; padding: 14px 20px; }
+        thead th:first-child { border-radius: 12px 0 0 12px; }
+        thead th:last-child { border-radius: 0 12px 12px 0; }
+        tbody tr { transition: all 0.18s; }
+        tbody tr:hover { background: #f8f9fc; }
+        tbody td { padding: 14px 20px; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+
+        /* TOGGLE */
+        .toggle { 
+            position: relative; width: 46px; height: 24px; 
+            background: #d1d5db; border-radius: 12px; cursor: pointer;
+            transition: background 0.25s; flex-shrink: 0;
         }
-        .modal.active { display: flex; }
+        .toggle.on { background: #10b981; }
+        .toggle::after {
+            content: ''; position: absolute;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: white; top: 3px; left: 3px;
+            transition: transform 0.25s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        .toggle.on::after { transform: translateX(22px); }
+
+        /* PASSWORD BLUR */
+        .pw { filter: blur(5px); cursor: pointer; transition: filter 0.2s; user-select: none; }
+        .pw.show { filter: none; }
+
+        /* ACTION BUTTONS */
+        .btn-edit { background: var(--blue); color: white; padding: 5px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; cursor: pointer; border: none; transition: all 0.18s; }
+        .btn-edit:hover { background: #1e2370; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(46,49,146,0.3); }
+        
+        .btn-danger { background: var(--red); color: white; padding: 5px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; transition: all 0.18s; }
+        .btn-danger:hover { background: #c01520; }
+
+        /* SEARCH */
+        .search-box {
+            background: white; border: 2px solid #e5e7eb; border-radius: 12px;
+            padding: 11px 18px; font-size: 14px; font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s; width: 300px;
+        }
+        .search-box:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(46,49,146,0.1); }
+
+        /* FORM INPUTS */
+        .form-input {
+            width: 100%; border: 2px solid #e5e7eb; border-radius: 12px;
+            padding: 11px 16px; font-size: 14px; font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            transition: border-color 0.2s; background: white;
+        }
+        .form-input:focus { outline: none; border-color: var(--blue); }
+        .form-label { display: block; font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 6px; }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
+        .modal.open { display: flex; }
+        .modal-box { background: white; border-radius: 24px; overflow: hidden; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(0,0,0,0.2); }
+        .modal-header { padding: 28px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 10px; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .modal-close:hover { background: rgba(255,255,255,0.35); }
+        .modal-body { padding: 32px; }
+
+        /* BADGE */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-amber { background: #fef3c7; color: #92400e; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-purple { background: #ede9fe; color: #5b21b6; }
+
+        /* PRIMARY BUTTON */
+        .btn-primary { 
+            background: var(--blue); color: white; border: none; 
+            padding: 13px 28px; border-radius: 12px; font-weight: 800; 
+            font-family: 'DM Sans', sans-serif; font-size: 13px; 
+            text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
+            transition: all 0.2s; width: 100%;
+        }
+        .btn-primary:hover { background: #1e2370; box-shadow: 0 6px 18px rgba(46,49,146,0.35); transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-accent { 
+            background: var(--red); color: white; border: none; 
+            padding: 11px 24px; border-radius: 12px; font-weight: 700; 
+            font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-accent:hover { background: #c01520; box-shadow: 0 4px 14px rgba(235,28,36,0.35); }
+
+        .btn-green {
+            background: #10b981; color: white; border: none;
+            padding: 11px 24px; border-radius: 12px; font-weight: 700;
+            font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-green:hover { background: #059669; box-shadow: 0 4px 14px rgba(16,185,129,0.35); }
+
+        .btn-amber {
+            background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none;
+            padding: 11px 24px; border-radius: 12px; font-weight: 700;
+            font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-amber:hover { box-shadow: 0 4px 14px rgba(245,158,11,0.4); }
+
+        /* SECTION DIVIDER */
+        .section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #9ca3af; margin: 24px 0 12px; display: flex; align-items: center; gap: 8px; }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: #f3f4f6; }
+
+        /* PAYMENT TABLE SPECIFICS */
+        .pay-status-paid { color: #166534; font-weight: 700; }
+        .pay-status-due { color: #991b1b; font-weight: 700; }
+        .pay-status-partial { color: #92400e; font-weight: 700; }
+
+        /* BATCH CARD */
+        .batch-card { background: white; border-radius: 16px; padding: 20px; border: 2px solid #f3f4f6; transition: all 0.2s; }
+        .batch-card:hover { border-color: var(--blue); box-shadow: 0 4px 16px rgba(46,49,146,0.1); }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        /* SECTION INFO BOX */
+        .info-box { border-left: 4px solid var(--blue); background: var(--blue-light); padding: 12px 16px; border-radius: 0 10px 10px 0; }
+        .info-box-amber { border-left-color: #f59e0b; background: #fffbeb; }
+        .info-box-green { border-left-color: #10b981; background: #ecfdf5; }
+        .info-box-red { border-left-color: var(--red); background: var(--red-light); }
+
+        /* Empty state */
+        .empty-state { padding: 60px 20px; text-align: center; }
+        .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+        .empty-state-text { color: #9ca3af; font-weight: 600; font-size: 15px; }
     </style>
 </head>
-<body class="min-h-screen p-8">
+<body class="min-h-screen p-6">
 
-    <!-- Main Container -->
-    <div class="max-w-[1800px] mx-auto">
-        
-        <!-- Header -->
-        <header class="glass-card rounded-3xl p-8 mb-8">
-            <div class="flex justify-between items-center">
-                <div>
-                    <div class="flex items-center gap-4 mb-2">
-                        <div class="h-16 w-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg">U</div>
-                        <div>
-                            <h1 class="text-4xl font-black text-gray-900 tracking-tight">CBS Education</h1>
-                            <p class="text-sm font-bold text-purple-600 uppercase tracking-wider">Unit Franchisee Center - Mumbai</p>
-                        </div>
+    <div class="max-w-[1700px] mx-auto">
+
+        <!-- ===== HEADER ===== -->
+        <header class="glass rounded-2xl p-6 mb-6">
+            <div class="flex justify-between items-center flex-wrap gap-4">
+                <div class="flex items-center gap-4">
+                    <div style="background: linear-gradient(135deg, var(--blue), #4f52c4);" class="h-14 w-14 rounded-xl flex items-center justify-center text-white font-black text-2xl shadow-lg">
+                        <img src="download.png" alt="Logo" class="h-10 w-auto" onerror="this.parentElement.innerText='U'">
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-black text-gray-900 tracking-tight">CBS Education</h1>
+                        <p class="text-xs font-bold uppercase tracking-widest" style="color: var(--blue)">Unit Franchisee Dashboard · Mumbai</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-6">
+                <div class="flex items-center gap-5">
                     <div class="text-right">
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Center Code</p>
-                        <p id="display-center" class="text-2xl font-black text-gray-900 mono">--</p>
-                        <p id="display-name" class="text-sm font-semibold text-gray-600">--</p>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Center</p>
+                        <p id="display-center" class="text-xl font-black text-gray-900 mono">--</p>
+                        <p id="display-name" class="text-sm font-semibold text-gray-500">--</p>
                     </div>
-                    <button onclick="logout()" class="px-6 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-all">
+                    <button onclick="logout()" style="background: var(--red);" class="px-5 py-2.5 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm">
                         Logout
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- Stats Dashboard -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="stat-card border-l-4 border-green-500">
-                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Active Students</p>
-                <h3 id="stat-students" class="text-4xl font-black text-gray-900">0</h3>
+        <!-- ===== STATS ===== -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="stat-card" style="border-left-color: #10b981;">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Active Students</p>
+                <h3 id="stat-active" class="text-3xl font-black text-gray-900">0</h3>
             </div>
-            <div class="stat-card border-l-4 border-blue-500">
-                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Total Enrolled</p>
-                <h3 id="stat-total" class="text-4xl font-black text-gray-900">0</h3>
+            <div class="stat-card" style="border-left-color: var(--blue);">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Enrolled</p>
+                <h3 id="stat-total" class="text-3xl font-black text-gray-900">0</h3>
             </div>
-            <div class="stat-card border-l-4 border-purple-500">
-                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Center Status</p>
-                <h3 class="text-2xl font-black text-purple-600">Active</h3>
+            <div class="stat-card" style="border-left-color: #f59e0b;">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Batches</p>
+                <h3 id="stat-batches" class="text-3xl font-black text-gray-900">0</h3>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--red);">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">CIs</p>
+                <h3 id="stat-ci" class="text-3xl font-black text-gray-900">0</h3>
             </div>
         </div>
 
-        <!-- Students Table -->
-        <div class="glass-card rounded-3xl overflow-hidden">
-            <div class="p-8 border-b border-gray-200 flex justify-between items-center flex-wrap gap-4">
-                <h2 class="text-2xl font-black text-gray-900">Student Directory</h2>
-                <div class="flex gap-4 items-center flex-wrap">
-                    <input type="text" id="search-students" placeholder="Search by name, ID, email..." class="search-box w-80" onkeyup="searchStudents()">
-                    <button onclick="openTransferModal()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold rounded-xl hover:shadow-lg transition-all">
-                        🔄 Transfer In
-                    </button>
-                    <button onclick="openEnrollModal()" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl hover:shadow-lg transition-all">
-                        ✨ Enroll Student
-                    </button>
+        <!-- ===== TAB NAVIGATION ===== -->
+        <div class="glass rounded-2xl p-4 mb-6">
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="switchTab('students')">📋 Students</button>
+                <button class="tab-btn" onclick="switchTab('payments')">💳 Payment Tracker</button>
+                <button class="tab-btn" onclick="switchTab('batches')">📅 Batch Management</button>
+                <button class="tab-btn" onclick="switchTab('ci')">👨‍🏫 Course Instructors</button>
+            </div>
+        </div>
+
+        <!-- ===== TAB: STUDENTS ===== -->
+        <div id="tab-students" class="tab-panel active">
+            <div class="glass rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-gray-100 flex justify-between items-center flex-wrap gap-4">
+                    <h2 class="text-xl font-black text-gray-900">Student Directory</h2>
+                    <div class="flex gap-3 items-center flex-wrap">
+                        <input type="text" id="search-students" placeholder="🔍  Search name, ID, email…" class="search-box" onkeyup="searchStudents()">
+                        <button onclick="openModal('transferModal')" class="btn-amber">🔄 Transfer In</button>
+                        <button onclick="openEnrollModal()" style="background: var(--blue); color: white; border: none; padding: 11px 24px; border-radius: 12px; font-weight: 700; font-family: inherit; font-size: 13px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">✨ Enroll Student</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="text-left">Full Name</th>
+                                <th class="text-left">Student ID</th>
+                                <th class="text-left">Email / Username</th>
+                                <th class="text-left">Password</th>
+                                <th class="text-left">Level</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbl-students"></tbody>
+                    </table>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50 text-xs font-black text-gray-500 uppercase tracking-wider">
-                        <tr>
-                            <th class="px-8 py-5 text-left">Full Name</th>
-                            <th class="px-8 py-5 text-left">Student ID</th>
-                            <th class="px-8 py-5 text-left">Username (Email)</th>
-                            <th class="px-8 py-5 text-left">Password</th>
-                            <th class="px-8 py-5 text-left">Level</th>
-                            <th class="px-8 py-5 text-center">Status</th>
-                            <th class="px-8 py-5 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-students" class="divide-y divide-gray-100"></tbody>
-                </table>
+        </div>
+
+        <!-- ===== TAB: PAYMENTS ===== -->
+        <div id="tab-payments" class="tab-panel">
+            <div class="glass rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-gray-100 flex justify-between items-center flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-xl font-black text-gray-900">Payment Tracker</h2>
+                        <p class="text-sm text-gray-500 font-medium mt-0.5">Monthly fee collection overview for your center</p>
+                    </div>
+                    <div class="flex gap-3 items-center">
+                        <select id="pay-month-filter" class="form-input" style="width:auto;" onchange="filterPayments()">
+                            <option value="">All Months</option>
+                        </select>
+                        <button onclick="openModal('addPaymentModal')" class="btn-green">+ Record Payment</button>
+                    </div>
+                </div>
+
+                <!-- Payment Summary -->
+                <div class="p-6 grid grid-cols-3 gap-4 border-b border-gray-100">
+                    <div class="info-box-green info-box rounded-lg p-4">
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Collected</p>
+                        <p id="pay-collected" class="text-2xl font-black text-green-700 mt-1">₹0</p>
+                    </div>
+                    <div class="info-box-red info-box rounded-lg p-4">
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pending</p>
+                        <p id="pay-pending" class="text-2xl font-black text-red-700 mt-1">₹0</p>
+                    </div>
+                    <div class="info-box info-box rounded-lg p-4">
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Expected</p>
+                        <p id="pay-total" class="text-2xl font-black mt-1" style="color: var(--blue)">₹0</p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="text-left">Student Name</th>
+                                <th class="text-left">Student ID</th>
+                                <th class="text-left">Month</th>
+                                <th class="text-right">Amount</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-left">Paid On</th>
+                                <th class="text-left">Method</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbl-payments"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Edit Student Modal -->
+        <!-- ===== TAB: BATCHES ===== -->
+        <div id="tab-batches" class="tab-panel">
+            <div class="glass rounded-2xl p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-black text-gray-900">Batch Management</h2>
+                        <p class="text-sm text-gray-500 font-medium mt-0.5">Organise class schedules and assign students</p>
+                    </div>
+                    <button onclick="openModal('addBatchModal')" class="btn-primary" style="width:auto; padding: 11px 24px;">+ Create Batch</button>
+                </div>
+                <div id="batches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="empty-state col-span-3">
+                        <div class="empty-state-icon">📅</div>
+                        <p class="empty-state-text">No batches created yet. Click "Create Batch" to get started.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: CI ===== -->
+        <div id="tab-ci" class="tab-panel">
+            <div class="glass rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-gray-100 flex justify-between items-center flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-xl font-black text-gray-900">Course Instructors</h2>
+                        <p class="text-sm text-gray-500 font-medium mt-0.5">Manage CI accounts for your center</p>
+                    </div>
+                    <button onclick="openModal('addCIModal')" class="btn-primary" style="width:auto; padding:11px 24px;">+ Add Course Instructor</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="text-left">Full Name</th>
+                                <th class="text-left">Email / Username</th>
+                                <th class="text-left">Password</th>
+                                <th class="text-left">Assigned Batches</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbl-ci"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /max-w -->
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- EDIT STUDENT MODAL -->
     <div id="editModal" class="modal">
-        <div class="bg-white rounded-3xl overflow-hidden max-w-2xl w-full m-4">
-            <div class="p-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex justify-between items-center">
+        <div class="modal-box max-w-lg">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--blue), #4f52c4);">
                 <div>
-                    <h3 class="text-3xl font-black">Edit Student</h3>
-                    <p class="text-indigo-100 text-sm font-semibold mt-1">Update student information</p>
+                    <h3 class="text-2xl font-black text-white">Edit Student</h3>
+                    <p class="text-indigo-200 text-sm font-medium mt-0.5">Update student information</p>
                 </div>
-                <button onclick="closeModal('editModal')" class="text-3xl hover:bg-white hover:bg-opacity-20 w-12 h-12 rounded-xl transition">×</button>
+                <button class="modal-close" onclick="closeModal('editModal')">×</button>
             </div>
-            <div class="p-8">
+            <div class="modal-body">
                 <form id="edit-form">
                     <input type="hidden" id="edit-user-id">
-                    
+                    <div class="mb-5">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" id="edit-name" class="form-input" required>
+                    </div>
+                    <div class="mb-5">
+                        <label class="form-label">Email / Username</label>
+                        <input type="email" id="edit-email" class="form-input mono" required>
+                    </div>
                     <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Full Name</label>
-                        <input type="text" id="edit-name" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                        <label class="form-label">New Password <span class="text-gray-400 normal-case font-normal">(leave blank to keep current)</span></label>
+                        <input type="text" id="edit-password" placeholder="Enter new password" class="form-input mono">
                     </div>
-                    
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Username (Email)</label>
-                        <input type="email" id="edit-email" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold mono" required>
-                    </div>
-                    
-                    <div class="mb-8">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">New Password (leave blank to keep current)</label>
-                        <input type="text" id="edit-password" placeholder="Enter new password" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold mono">
-                    </div>
-                    
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
-                        Save Changes
-                    </button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Enroll Student Modal - EXPANDED VERSION -->
+    <!-- ENROLL STUDENT MODAL -->
     <div id="enrollModal" class="modal">
-        <div class="bg-white rounded-3xl overflow-hidden max-w-3xl w-full m-4 max-h-[90vh] overflow-y-auto">
-            <div class="p-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex justify-between items-center sticky top-0">
+        <div class="modal-box max-w-2xl">
+            <div class="modal-header sticky top-0 z-10" style="background: linear-gradient(135deg, var(--blue), #4f52c4);">
                 <div>
-                    <h3 class="text-3xl font-black">Enroll New Student</h3>
-                    <p class="text-indigo-100 text-sm font-semibold mt-1">Generate National Scholar ID with Complete Information</p>
+                    <h3 class="text-2xl font-black text-white">Enroll New Student</h3>
+                    <p class="text-indigo-200 text-sm font-medium mt-0.5">Generate National Scholar ID</p>
                 </div>
-                <button onclick="closeModal('enrollModal')" class="text-3xl hover:bg-white hover:bg-opacity-20 w-12 h-12 rounded-xl transition">×</button>
+                <button class="modal-close" onclick="closeModal('enrollModal')">×</button>
             </div>
-            
-            <!-- Success View -->
-            <div id="enroll-success-view" style="display: none;" class="p-12 text-center">
-                <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-5xl mx-auto mb-6">✅</div>
-                <h4 class="text-3xl font-black text-gray-900 mb-3">Student Enrolled Successfully!</h4>
-                <p class="text-gray-600 font-semibold mb-8">Please provide these credentials to the student:</p>
-                <div class="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 mb-8 text-left">
-                    <pre id="enroll-creds-output" class="mono text-xs font-bold text-purple-600 whitespace-pre-wrap"></pre>
+
+            <!-- Success -->
+            <div id="enroll-success" style="display:none;" class="modal-body text-center py-12">
+                <div class="text-6xl mb-5">✅</div>
+                <h4 class="text-2xl font-black text-gray-900 mb-2">Student Enrolled!</h4>
+                <p class="text-gray-500 font-medium mb-6">Share these credentials with the student:</p>
+                <div class="bg-gray-50 border-2 border-gray-200 rounded-xl p-5 text-left mb-6">
+                    <pre id="enroll-creds" class="mono text-xs font-bold text-indigo-700 whitespace-pre-wrap leading-relaxed"></pre>
                 </div>
-                <button onclick="window.location.reload()" class="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all">
-                    Return to Dashboard
-                </button>
+                <button onclick="window.location.reload()" class="btn-primary">Return to Dashboard</button>
             </div>
-            
-            <!-- Form View -->
-            <div id="enroll-form-view" class="p-8">
+
+            <!-- Form -->
+            <div id="enroll-form-wrap" class="modal-body">
                 <form id="enroll-form">
-                    <!-- STUDENT INFORMATION SECTION -->
-                    <div class="mb-6 pb-6 border-b-2 border-gray-200">
-                        <h4 class="text-sm font-black text-gray-700 uppercase tracking-wider mb-4">📋 Student Information</h4>
-                        
-                        <div class="mb-4">
-                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Student Full Name *</label>
-                            <input type="text" id="s-name" placeholder="Firstname Surname" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                    <!-- Student Info -->
+                    <div class="section-title">📋 Student Information</div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Student Full Name *</label>
+                        <input type="text" id="s-name" class="form-input" placeholder="First Last" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Date of Birth *</label>
+                            <input type="date" id="s-dob" class="form-input" required>
                         </div>
-                        
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Date of Birth *</label>
-                                <input type="date" id="s-dob" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Gender *</label>
-                                <select id="s-gender" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
-                                    <option value="">Select Gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
+                        <div>
+                            <label class="form-label">Gender *</label>
+                            <select id="s-gender" class="form-input" required>
+                                <option value="">Select</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
                         </div>
-                        
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Current Standard/Grade *</label>
-                                <select id="s-standard" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
-                                    <option value="">Select Standard</option>
-                                    <option value="1">Grade 1</option>
-                                    <option value="2">Grade 2</option>
-                                    <option value="3">Grade 3</option>
-                                    <option value="4">Grade 4</option>
-                                    <option value="5">Grade 5</option>
-                                    <option value="6">Grade 6</option>
-                                    <option value="7">Grade 7</option>
-                                    <option value="8">Grade 8</option>
-                                    <option value="9">Grade 9</option>
-                                    <option value="10">Grade 10</option>
-                                    <option value="11">Grade 11</option>
-                                    <option value="12">Grade 12</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">School Name *</label>
-                                <input type="text" id="s-school" placeholder="e.g., St. Xavier's School" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
-                            </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Standard / Grade *</label>
+                            <select id="s-standard" class="form-input" required>
+                                <option value="">Select</option>
+                                <option value="1">Grade 1</option><option value="2">Grade 2</option>
+                                <option value="3">Grade 3</option><option value="4">Grade 4</option>
+                                <option value="5">Grade 5</option><option value="6">Grade 6</option>
+                                <option value="7">Grade 7</option><option value="8">Grade 8</option>
+                                <option value="9">Grade 9</option><option value="10">Grade 10</option>
+                            </select>
                         </div>
-                        
-                        <div class="mb-4">
-                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Starting UCMAS Level *</label>
-                            <select id="s-level" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                        <div>
+                            <label class="form-label">Starting UCMAS Level *</label>
+                            <select id="s-level" class="form-input" required>
                                 <option value="">Select Level</option>
                                 <option value="1">Level 0 (Foundation)</option>
-                                <option value="2">Level 1</option>
-                                <option value="3">Level 2</option>
-                                <option value="4">Level 3</option>
-                                <option value="5">Level 4</option>
-                                <option value="6">Level 5</option>
-                                <option value="7">Level 7</option>
-                                <option value="8">Level 8</option>
-                                <option value="9">Level 9</option>
+                                <option value="2">Level 1</option><option value="3">Level 2</option>
+                                <option value="4">Level 3</option><option value="5">Level 4</option>
+                                <option value="6">Level 5</option><option value="7">Level 7</option>
+                                <option value="8">Level 8</option><option value="9">Level 9</option>
                                 <option value="10">Level 10</option>
                             </select>
                         </div>
                     </div>
+                    <div class="mb-4">
+                        <label class="form-label">School Name *</label>
+                        <input type="text" id="s-school" class="form-input" placeholder="e.g., St. Xavier's School" required>
+                    </div>
 
-                    <!-- PARENT/GUARDIAN INFORMATION SECTION -->
-                    <div class="mb-6 pb-6 border-b-2 border-gray-200">
-                        <h4 class="text-sm font-black text-gray-700 uppercase tracking-wider mb-4">👨‍👩‍👦 Parent/Guardian Information</h4>
-                        
-                        <div class="mb-4">
-                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Father's Name *</label>
-                            <input type="text" id="s-father-name" placeholder="Full Name" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                    <!-- Parent Info -->
+                    <div class="section-title">👨‍👩‍👦 Parent / Guardian</div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Father's Name *</label>
+                            <input type="text" id="s-father-name" class="form-input" required>
                         </div>
-                        
-                        <div class="mb-4">
-                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Father's Mobile Number *</label>
-                            <input type="tel" id="s-father-phone" placeholder="+91 XXXXX XXXXX" pattern="[0-9\s+\-]{10,}" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                        <div>
+                            <label class="form-label">Father's Mobile *</label>
+                            <input type="tel" id="s-father-phone" class="form-input" placeholder="+91 XXXXX XXXXX" required>
                         </div>
-                        
-                        <div class="mb-4">
-                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Mother's Name *</label>
-                            <input type="text" id="s-mother-name" placeholder="Full Name" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Mother's Name *</label>
+                            <input type="text" id="s-mother-name" class="form-input" required>
                         </div>
-                        
-                        <div class="mb-4">
-                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Mother's Mobile Number *</label>
-                            <input type="tel" id="s-mother-phone" placeholder="+91 XXXXX XXXXX" pattern="[0-9\s+\-]{10,}" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                        <div>
+                            <label class="form-label">Mother's Mobile *</label>
+                            <input type="tel" id="s-mother-phone" class="form-input" placeholder="+91 XXXXX XXXXX" required>
                         </div>
-                        
-                        <div class="mb-4">
-                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Primary Contact (Father/Mother)</label>
-                            <select id="s-primary-contact" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold">
-                                <option value="father">Father</option>
-                                <option value="mother">Mother</option>
-                                <option value="other">Other Guardian</option>
+                    </div>
+                    <div class="mb-5">
+                        <label class="form-label">Primary Contact</label>
+                        <select id="s-primary-contact" class="form-input">
+                            <option value="father">Father</option>
+                            <option value="mother">Mother</option>
+                            <option value="other">Other Guardian</option>
+                        </select>
+                    </div>
+
+                    <!-- Auto creds note -->
+                    <div class="info-box rounded-lg mb-6">
+                        <p class="text-xs font-bold mb-1" style="color:var(--blue)">✓ Auto-Generated Credentials</p>
+                        <p class="text-xs text-gray-600">Email: <span class="mono font-bold">[student_id]@ucmas.in</span></p>
+                        <p class="text-xs text-gray-600">Password: <span class="mono font-bold">Welcome@123</span></p>
+                    </div>
+
+                    <button type="submit" id="enroll-btn" class="btn-primary">Generate ID & Enroll</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRANSFER STUDENT MODAL -->
+    <div id="transferModal" class="modal">
+        <div class="modal-box max-w-lg">
+            <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <div>
+                    <h3 class="text-2xl font-black text-white">Transfer Student In</h3>
+                    <p class="text-amber-100 text-sm font-medium mt-0.5">Claim a student to your center</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('transferModal')">×</button>
+            </div>
+
+            <div id="transfer-success" style="display:none;" class="modal-body text-center py-10">
+                <div class="text-5xl mb-4">✅</div>
+                <h4 class="text-2xl font-black text-gray-900 mb-2">Transfer Successful!</h4>
+                <p id="transfer-msg" class="text-gray-500 font-medium mb-6">Student has been transferred to your center.</p>
+                <button onclick="window.location.reload()" class="btn-primary">View Dashboard</button>
+            </div>
+
+            <div id="transfer-form-wrap" class="modal-body">
+                <div class="info-box-amber info-box rounded-lg mb-6">
+                    <p class="text-sm font-semibold text-amber-900">
+                        <strong>Security Check:</strong> The student's DOB is used as a verification PIN. Their history will be preserved.
+                    </p>
+                </div>
+                <form id="transfer-form">
+                    <div class="mb-5">
+                        <label class="form-label">National Scholar ID *</label>
+                        <input type="text" id="t-student-id" placeholder="e.g. MH20170001" style="text-transform:uppercase;" class="form-input mono" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="form-label">Date of Birth (Security PIN) *</label>
+                        <input type="date" id="t-dob" class="form-input" required>
+                    </div>
+                    <button type="submit" id="transfer-btn" class="btn-amber" style="width:100%; padding:13px; font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; border-radius:12px;">Verify & Transfer In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD PAYMENT MODAL -->
+    <div id="addPaymentModal" class="modal">
+        <div class="modal-box max-w-lg">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <div>
+                    <h3 class="text-2xl font-black text-white">Record Payment</h3>
+                    <p class="text-green-100 text-sm font-medium mt-0.5">Log a student fee payment</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('addPaymentModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="payment-form">
+                    <div class="mb-4">
+                        <label class="form-label">Student *</label>
+                        <select id="pay-student-id" class="form-input" required>
+                            <option value="">Select student...</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Month *</label>
+                            <select id="pay-month" class="form-input" required>
+                                <option value="April 2025">April 2025</option>
+                                <option value="May 2025">May 2025</option>
+                                <option value="June 2025">June 2025</option>
+                                <option value="July 2025">July 2025</option>
+                                <option value="August 2025">August 2025</option>
+                                <option value="September 2025">September 2025</option>
+                                <option value="October 2025">October 2025</option>
+                                <option value="November 2025">November 2025</option>
+                                <option value="December 2025">December 2025</option>
+                                <option value="January 2026">January 2026</option>
+                                <option value="February 2026">February 2026</option>
+                                <option value="March 2026">March 2026</option>
+                                <option value="April 2026" selected>April 2026</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Amount (₹) *</label>
+                            <input type="number" id="pay-amount" class="form-input" placeholder="e.g. 1500" min="0" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Payment Status *</label>
+                            <select id="pay-status" class="form-input" required>
+                                <option value="paid">Paid</option>
+                                <option value="partial">Partial</option>
+                                <option value="due">Due</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Payment Method</label>
+                            <select id="pay-method" class="form-input">
+                                <option value="cash">Cash</option>
+                                <option value="upi">UPI</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="cheque">Cheque</option>
                             </select>
                         </div>
                     </div>
-
-                    <!-- ENROLLMENT DETAILS -->
-                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-6">
-                        <p class="text-xs font-bold text-blue-700">✓ Auto-Generated Credentials:</p>
-                        <p class="text-xs text-blue-600 mt-2">Email: <span id="auto-email" class="font-mono font-bold">--@ucmas.in</span></p>
-                        <p class="text-xs text-blue-600">Password: <span class="font-mono font-bold">Welcome@123</span></p>
+                    <div class="mb-5">
+                        <label class="form-label">Payment Date</label>
+                        <input type="date" id="pay-date" class="form-input">
                     </div>
-                    
-                    <button type="submit" id="enroll-btn" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
-                        Generate ID & Enroll
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Transfer Student Modal -->
-    <div id="transferModal" class="modal">
-        <div class="bg-white rounded-3xl overflow-hidden max-w-2xl w-full m-4">
-            <div class="p-8 bg-gradient-to-r from-amber-500 to-orange-600 text-white flex justify-between items-center">
-                <div>
-                    <h3 class="text-3xl font-black">Claim Transfer Student</h3>
-                    <p class="text-amber-100 text-sm font-semibold mt-1">Securely pull student to your center</p>
-                </div>
-                <button onclick="closeModal('transferModal')" class="text-3xl hover:bg-white hover:bg-opacity-20 w-12 h-12 rounded-xl transition">×</button>
-            </div>
-            
-            <div id="transfer-success-view" style="display: none;" class="p-12 text-center">
-                <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-5xl mx-auto mb-6">✅</div>
-                <h4 class="text-3xl font-black text-gray-900 mb-3">Student Claimed Successfully!</h4>
-                <p id="transfer-success-message" class="text-gray-600 font-semibold mb-8">The student has been transferred to your center.</p>
-                <button onclick="window.location.reload()" class="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all">
-                    View Dashboard
-                </button>
-            </div>
-            
-            <div id="transfer-form-view" class="p-8">
-                <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 mb-8">
-                    <p class="text-amber-900 font-semibold text-sm leading-relaxed">
-                        <strong>Security Verification Required:</strong> Upon verification, this student's Current Unit will be updated to your center. Their practice history will be preserved.
-                    </p>
-                </div>
-                
-                <form id="transfer-form">
                     <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">National Scholar ID</label>
-                        <input type="text" id="t-student-id" placeholder="e.g. KK20170001" style="text-transform: uppercase;" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-amber-500 focus:outline-none font-semibold mono" required>
+                        <label class="form-label">Notes</label>
+                        <input type="text" id="pay-notes" class="form-input" placeholder="Optional notes...">
                     </div>
-                    
-                    <div class="mb-8">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Date of Birth (Security PIN)</label>
-                        <input type="date" id="t-dob" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-amber-500 focus:outline-none font-semibold" required>
-                    </div>
-                    
-                    <button type="submit" id="transfer-btn" class="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
-                        Verify & Transfer In
-                    </button>
+                    <button type="submit" id="pay-btn" class="btn-primary" style="background: #10b981;">Record Payment</button>
                 </form>
             </div>
         </div>
     </div>
+
+    <!-- ADD BATCH MODAL -->
+    <div id="addBatchModal" class="modal">
+        <div class="modal-box max-w-lg">
+            <div class="modal-header" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                <div>
+                    <h3 class="text-2xl font-black text-white">Create New Batch</h3>
+                    <p class="text-purple-200 text-sm font-medium mt-0.5">Set up a class schedule</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('addBatchModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="batch-form">
+                    <div class="mb-4">
+                        <label class="form-label">Batch Name *</label>
+                        <input type="text" id="b-name" class="form-input" placeholder="e.g. Monday Morning Batch" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Level *</label>
+                            <select id="b-level" class="form-input" required>
+                                <option value="">Select Level</option>
+                                <option value="Foundation">Foundation</option>
+                                <option value="Level 1">Level 1</option>
+                                <option value="Level 2">Level 2</option>
+                                <option value="Level 3">Level 3</option>
+                                <option value="Level 4">Level 4</option>
+                                <option value="Level 5">Level 5</option>
+                                <option value="Higher">Higher A / B</option>
+                                <option value="Advance">Advance</option>
+                                <option value="Grand">Grand A / B</option>
+                                <option value="Mixed">Mixed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Max Capacity</label>
+                            <input type="number" id="b-capacity" class="form-input" value="15" min="1" max="50">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Days *</label>
+                        <div class="flex gap-2 flex-wrap mt-1" id="day-picker">
+                            <label class="day-chip"><input type="checkbox" name="b-day" value="Mon"> <span>Mon</span></label>
+                            <label class="day-chip"><input type="checkbox" name="b-day" value="Tue"> <span>Tue</span></label>
+                            <label class="day-chip"><input type="checkbox" name="b-day" value="Wed"> <span>Wed</span></label>
+                            <label class="day-chip"><input type="checkbox" name="b-day" value="Thu"> <span>Thu</span></label>
+                            <label class="day-chip"><input type="checkbox" name="b-day" value="Fri"> <span>Fri</span></label>
+                            <label class="day-chip"><input type="checkbox" name="b-day" value="Sat"> <span>Sat</span></label>
+                            <label class="day-chip"><input type="checkbox" name="b-day" value="Sun"> <span>Sun</span></label>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Start Time *</label>
+                            <input type="time" id="b-start" class="form-input" required>
+                        </div>
+                        <div>
+                            <label class="form-label">End Time *</label>
+                            <input type="time" id="b-end" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="form-label">Assign CI</label>
+                        <select id="b-ci" class="form-input">
+                            <option value="">Select CI (optional)</option>
+                        </select>
+                    </div>
+                    <button type="submit" id="batch-btn" class="btn-primary" style="background: #8b5cf6;">Create Batch</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD CI MODAL -->
+    <div id="addCIModal" class="modal">
+        <div class="modal-box max-w-lg">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ec4899, #be185d);">
+                <div>
+                    <h3 class="text-2xl font-black text-white">Add Course Instructor</h3>
+                    <p class="text-pink-200 text-sm font-medium mt-0.5">Create a CI account for your center</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('addCIModal')">×</button>
+            </div>
+
+            <div id="ci-success" style="display:none;" class="modal-body text-center py-10">
+                <div class="text-5xl mb-4">✅</div>
+                <h4 class="text-2xl font-black text-gray-900 mb-2">CI Created!</h4>
+                <div class="bg-gray-50 border-2 border-gray-200 rounded-xl p-5 text-left mb-6">
+                    <pre id="ci-creds" class="mono text-xs font-bold text-purple-700 whitespace-pre-wrap leading-relaxed"></pre>
+                </div>
+                <button onclick="window.location.reload()" class="btn-primary">Return to Dashboard</button>
+            </div>
+
+            <div id="ci-form-wrap" class="modal-body">
+                <div class="info-box rounded-lg mb-6">
+                    <p class="text-xs font-bold mb-1" style="color:var(--blue)">✓ CI Login Format</p>
+                    <p class="text-xs text-gray-600">Email: <span class="mono font-bold">[centercode].ci@ucmas.in</span></p>
+                    <p class="text-xs text-gray-600">Password: <span class="mono font-bold">Welcome@123</span></p>
+                </div>
+                <form id="ci-form">
+                    <div class="mb-4">
+                        <label class="form-label">CI Full Name *</label>
+                        <input type="text" id="ci-name" class="form-input" placeholder="e.g. Priya Sharma" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">CI Identifier <span class="text-gray-400 normal-case font-normal">(suffix before @ucmas.in)</span></label>
+                        <div class="flex gap-2 items-center">
+                            <input type="text" id="ci-code" class="form-input" placeholder="e.g. mh238.ci" style="font-family: 'JetBrains Mono';">
+                            <span class="text-gray-400 font-bold text-sm flex-shrink-0">@ucmas.in</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Leave blank to auto-generate from your center code</p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Mobile Number</label>
+                        <input type="tel" id="ci-phone" class="form-input" placeholder="+91 XXXXX XXXXX">
+                    </div>
+                    <div class="mb-6">
+                        <label class="form-label">Qualification</label>
+                        <input type="text" id="ci-qual" class="form-input" placeholder="e.g. B.Ed, Graduate">
+                    </div>
+                    <button type="submit" id="ci-btn" class="btn-primary" style="background: #ec4899;">Create CI Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Day picker chips */
+        .day-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; color: #6b7280; transition: all 0.18s; }
+        .day-chip:has(input:checked) { border-color: var(--blue); background: var(--blue-light); color: var(--blue); }
+        .day-chip input { display: none; }
+    </style>
 
     <script>
-        // Initialize Supabase - Mumbai Configuration
-        const SUPABASE_URL = "https://offdxndcnsiejmwdznwb.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_2nb0HWCrTlZ3RvyHDn5Rmg_yUoz6xBW";
-        const supabase_client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    const SUPABASE_URL = "https://offdxndcnsiejmwdznwb.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_2nb0HWCrTlZ3RvyHDn5Rmg_yUoz6xBW";
+    const supabase_client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let allStudents = [];
+    // Edge function name — MUST use hyphen
+    const MANAGE_FN = 'manage-student';
 
-        // ============================================================================
-        // LOGOUT FUNCTION
-        // ============================================================================
-        async function logout() {
-            try {
-                await supabase_client.auth.signOut();
-                sessionStorage.clear();
-                window.location.href = 'index.html';
-            } catch (error) {
-                console.error('Logout error:', error);
-                sessionStorage.clear();
-                window.location.href = 'index.html';
-            }
+    let allStudents = [];
+    let allPayments = [];
+    let allBatches = [];
+    let allCIs = [];
+    let currentUnitId = '';
+    let centerCode = '';
+
+    // ============================================================
+    // TAB SWITCHING
+    // ============================================================
+    function switchTab(name) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        // Match button by text
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            if (b.getAttribute('onclick') === `switchTab('${name}')`) b.classList.add('active');
+        });
+    }
+
+    // ============================================================
+    // MODAL HELPERS
+    // ============================================================
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    // Close on backdrop click
+    document.querySelectorAll('.modal').forEach(m => {
+        m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+    });
+
+    function openEnrollModal() {
+        document.getElementById('enroll-form-wrap').style.display = 'block';
+        document.getElementById('enroll-success').style.display = 'none';
+        document.getElementById('enroll-form').reset();
+        document.getElementById('enroll-btn').disabled = false;
+        document.getElementById('enroll-btn').innerText = 'Generate ID & Enroll';
+        openModal('enrollModal');
+    }
+
+    // ============================================================
+    // LOGOUT
+    // ============================================================
+    async function logout() {
+        await supabase_client.auth.signOut().catch(() => {});
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    async function init() {
+        const userEmail = sessionStorage.getItem('userEmail') || 'unit@ucmas.in';
+        centerCode = userEmail.split('@')[0].toUpperCase();
+        currentUnitId = sessionStorage.getItem('userId') || '';
+        const userName = sessionStorage.getItem('userName') || 'Center Admin';
+
+        document.getElementById('display-center').innerText = centerCode;
+        document.getElementById('display-name').innerText = userName;
+
+        await loadStudents();
+        loadPayments();
+        loadBatches();
+        loadCIs();
+    }
+
+    // ============================================================
+    // STUDENTS
+    // ============================================================
+    async function loadStudents() {
+        try {
+            const { data, error } = await supabase_client
+                .from('profiles')
+                .select('*')
+                .eq('role', 'student')
+                .eq('current_unit_id', currentUnitId);
+            if (error) throw error;
+            allStudents = data || [];
+        } catch (err) {
+            console.error('Load students error:', err);
+            allStudents = [];
         }
+        const active = allStudents.filter(s => s.is_active !== false).length;
+        document.getElementById('stat-active').innerText = active;
+        document.getElementById('stat-total').innerText = allStudents.length;
+        renderStudents(allStudents);
+        populateStudentSelect();
+    }
 
-        // ============================================================================
-        // INITIALIZE DASHBOARD
-        // ============================================================================
-        async function init() {
-            const userEmail = sessionStorage.getItem('userEmail') || "unit@ucmas.in";
-            const centerCode = userEmail.split('@')[0].toUpperCase();
-            const userName = sessionStorage.getItem('userName') || "Center Admin";
-            
-            document.getElementById('display-center').innerText = centerCode;
-            document.getElementById('display-name').innerText = userName;
-            
+    function renderStudents(list) {
+        const tbody = document.getElementById('tbl-students');
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">🎓</div><p class="empty-state-text">No students enrolled yet.</p></td></tr>';
+            return;
+        }
+        tbody.innerHTML = list.map(s => `
+            <tr>
+                <td class="font-bold text-gray-900">${s.full_name || '—'}</td>
+                <td><span class="mono font-bold text-sm" style="color:var(--blue)">${s.student_code || 'PROCESSING'}</span>
+                    ${s.current_unit_id !== s.parent_unit_id ? '<span class="badge badge-amber ml-2">Transferred</span>' : ''}</td>
+                <td><span class="mono text-sm text-gray-600">${s.email || '—'}</span></td>
+                <td><span class="pw mono text-sm font-bold bg-gray-100 px-2 py-1 rounded-lg" onclick="this.classList.toggle('show')">${s.password || 'Welcome@123'}</span></td>
+                <td><span class="badge badge-blue">Level ${s.current_level || 1}</span></td>
+                <td class="text-center">
+                    ${s.is_active !== false
+                        ? '<span class="badge badge-green">Active</span>'
+                        : '<span class="badge badge-red">Inactive</span>'}
+                </td>
+                <td>
+                    <div class="flex gap-2 justify-center items-center">
+                        <button class="btn-edit" onclick="openEditModal('${s.id}')">Edit</button>
+                        <div class="toggle ${s.is_active !== false ? 'on' : ''}" onclick="toggleStatus('${s.id}', ${s.is_active !== false})"></div>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function searchStudents() {
+        const q = document.getElementById('search-students').value.toLowerCase();
+        renderStudents(allStudents.filter(s =>
+            s.full_name?.toLowerCase().includes(q) ||
+            s.student_code?.toLowerCase().includes(q) ||
+            s.email?.toLowerCase().includes(q)
+        ));
+    }
+
+    function openEditModal(id) {
+        const s = allStudents.find(x => x.id === id);
+        if (!s) return;
+        document.getElementById('edit-user-id').value = id;
+        document.getElementById('edit-name').value = s.full_name || '';
+        document.getElementById('edit-email').value = s.email || '';
+        document.getElementById('edit-password').value = '';
+        openModal('editModal');
+    }
+
+    async function toggleStatus(userId, current) {
+        try {
+            const { data: { session } } = await supabase_client.auth.getSession();
+            const { data, error } = await supabase_client.functions.invoke(MANAGE_FN, {
+                body: { action: 'toggle_status', user_id: userId, is_active: !current },
+                headers: { Authorization: `Bearer ${session?.access_token}` }
+            });
+            if (error || data?.error) throw new Error(data?.error || error?.message);
             await loadStudents();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to update status: ' + err.message);
+        }
+    }
+
+    // Edit form
+    document.getElementById('edit-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userId = document.getElementById('edit-user-id').value;
+        const name = document.getElementById('edit-name').value;
+        const email = document.getElementById('edit-email').value;
+        const password = document.getElementById('edit-password').value;
+        try {
+            const { data: { session } } = await supabase_client.auth.getSession();
+            const { data, error } = await supabase_client.functions.invoke(MANAGE_FN, {
+                body: { action: 'update_user', user_id: userId, full_name: name, email, password: password || undefined },
+                headers: { Authorization: `Bearer ${session?.access_token}` }
+            });
+            if (error || data?.error) throw new Error(data?.error || error?.message);
+            alert('Student updated!');
+            closeModal('editModal');
+            await loadStudents();
+        } catch (err) {
+            alert('Update failed: ' + err.message);
+        }
+    });
+
+    // Enroll form — FIX: use MANAGE_FN (manage-student with hyphen)
+    document.getElementById('enroll-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('enroll-btn');
+        const fullName = document.getElementById('s-name').value.trim();
+        const dob = document.getElementById('s-dob').value;
+        const gender = document.getElementById('s-gender').value;
+        const standard = document.getElementById('s-standard').value;
+        const school = document.getElementById('s-school').value.trim();
+        const level = document.getElementById('s-level').value;
+        const fatherName = document.getElementById('s-father-name').value.trim();
+        const fatherPhone = document.getElementById('s-father-phone').value.trim();
+        const motherName = document.getElementById('s-mother-name').value.trim();
+        const motherPhone = document.getElementById('s-mother-phone').value.trim();
+        const primaryContact = document.getElementById('s-primary-contact').value;
+
+        if (!fullName || !dob || !gender || !standard || !school || !level || !fatherName || !fatherPhone || !motherName || !motherPhone) {
+            alert('All required fields must be filled.'); return;
         }
 
-        // ============================================================================
-        // LOAD STUDENTS FROM DATABASE
-        // ============================================================================
-        async function loadStudents() {
+        btn.disabled = true;
+        btn.innerText = 'Creating Account…';
+
+        try {
+            const { data: { session } } = await supabase_client.auth.getSession();
+
+            // STEP 1: Create student profile
+            const { data, error } = await supabase_client.functions.invoke(MANAGE_FN, {
+                body: {
+                    action: 'create_student',
+                    full_name: fullName,
+                    date_of_birth: dob,
+                    gender, standard, school_name: school,
+                    current_level: level,
+                    father_name: fatherName, father_phone: fatherPhone,
+                    mother_name: motherName, mother_phone: motherPhone,
+                    primary_contact: primaryContact,
+                    parent_unit_id: currentUnitId
+                },
+                headers: { Authorization: `Bearer ${session.access_token}` }
+            });
+            if (error || data?.error) throw new Error(data?.error || error?.message || 'Enrollment failed');
+
+            // STEP 2: Create auth user
             try {
-                const unitId = sessionStorage.getItem('userId');
-                const { data, error } = await supabase_client
-                    .from('profiles')
-                    .select('*')
-                    .eq('role', 'student')
-                    .eq('current_unit_id', unitId);
-
-                if (error) throw error;
-
-                allStudents = data || [];
-                const activeCount = allStudents.filter(s => s.is_active !== false).length;
-                document.getElementById('stat-students').innerText = activeCount;
-                document.getElementById('stat-total').innerText = allStudents.length;
-                renderStudents(allStudents);
-            } catch (err) {
-                console.error("Error loading students:", err);
-                alert("Failed to load students");
-            }
-        }
-
-        // ============================================================================
-        // RENDER STUDENTS TABLE
-        // ============================================================================
-        function renderStudents(students) {
-            const tbody = document.getElementById('table-students');
-            
-            if (!students || students.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-8 py-16 text-center text-gray-400 font-semibold italic">No students enrolled yet. Click "Enroll Student" to get started.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = students.map(student => `
-                <tr>
-                    <td class="px-8 py-5 font-bold text-gray-900">
-                        ${student.full_name || 'N/A'}
-                    </td>
-                    <td class="px-8 py-5">
-                        <span class="mono font-bold text-purple-600 text-sm">
-                            ${student.student_code || 'PROCESSING...'}
-                        </span>
-                        ${student.current_unit_id !== student.parent_unit_id ? 
-                            '<span class="ml-2 px-2 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-black uppercase">Transferred</span>' 
-                            : ''}
-                    </td>
-                    <td class="px-8 py-5">
-                        <span class="mono text-sm font-semibold text-gray-700">${student.email || 'N/A'}</span>
-                    </td>
-                    <td class="px-8 py-5">
-                        <span class="password-field mono text-sm font-bold text-gray-900 inline-block px-3 py-1 bg-gray-100 rounded-lg" onclick="togglePassword(this)">
-                            ${student.password || 'Welcome@123'}
-                        </span>
-                    </td>
-                    <td class="px-8 py-5 font-bold text-gray-700">Level ${student.current_level || 1}</td>
-                    <td class="px-8 py-5 text-center">
-                        ${student.is_active !== false 
-                            ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-black uppercase">Active</span>' 
-                            : '<span class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-black uppercase">Inactive</span>'}
-                    </td>
-                    <td class="px-8 py-5">
-                        <div class="flex gap-3 items-center justify-center">
-                            <button class="action-btn edit-btn" onclick="openEditModal('${student.id}')">Edit</button>
-                            <div class="status-toggle ${student.is_active !== false ? 'active' : ''}" 
-                                 onclick="toggleStatus('${student.id}', ${student.is_active !== false})"></div>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // ============================================================================
-        // SEARCH STUDENTS
-        // ============================================================================
-        function searchStudents() {
-            const searchTerm = document.getElementById('search-students').value.toLowerCase();
-            const filtered = allStudents.filter(student => 
-                student.full_name?.toLowerCase().includes(searchTerm) ||
-                student.student_code?.toLowerCase().includes(searchTerm) ||
-                student.email?.toLowerCase().includes(searchTerm)
-            );
-            renderStudents(filtered);
-        }
-
-        // ============================================================================
-        // TOGGLE PASSWORD VISIBILITY
-        // ============================================================================
-        function togglePassword(element) {
-            element.classList.toggle('visible');
-        }
-
-        // ============================================================================
-        // TOGGLE STATUS (Active/Inactive)
-        // ============================================================================
-        async function toggleStatus(userId, currentStatus) {
-            const newStatus = !currentStatus;
-            try {
-                const { data: { session } } = await supabase_client.auth.getSession();
-
-                const { data, error } = await supabase_client.functions.invoke('manage_student', {
-                    body: { 
-                        action: 'toggle_status',
-                        user_id: userId,
-                        is_active: newStatus
-                    },
-                    headers: { Authorization: `Bearer ${session?.access_token}` }
-                });
-
-                if (error || (data && data.error)) {
-                    throw new Error(data?.error || error?.message || 'Toggle failed');
-                }
-                
-                await loadStudents();
-            } catch (err) {
-                console.error('Error toggling status:', err);
-                alert('Failed to update status');
-            }
-        }
-
-        // ============================================================================
-        // OPEN EDIT MODAL
-        // ============================================================================
-        function openEditModal(userId) {
-            const student = allStudents.find(s => s.id === userId);
-            if (!student) return;
-
-            document.getElementById('edit-user-id').value = userId;
-            document.getElementById('edit-name').value = student.full_name || '';
-            document.getElementById('edit-email').value = student.email || '';
-            document.getElementById('edit-password').value = '';
-            
-            document.getElementById('editModal').classList.add('active');
-        }
-
-        // ============================================================================
-        // EDIT FORM SUBMISSION
-        // ============================================================================
-        document.getElementById('edit-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const userId = document.getElementById('edit-user-id').value;
-            const name = document.getElementById('edit-name').value;
-            const email = document.getElementById('edit-email').value;
-            const password = document.getElementById('edit-password').value;
-
-            try {
-                const { data: { session } } = await supabase_client.auth.getSession();
-
-                const { data, error } = await supabase_client.functions.invoke('manage_student', {
-                    body: { 
-                        action: 'update_user',
-                        user_id: userId,
-                        full_name: name,
-                        email: email,
-                        password: password || undefined
-                    },
-                    headers: { Authorization: `Bearer ${session?.access_token}` }
-                });
-
-                if (error || (data && data.error)) {
-                    throw new Error(data?.error || error?.message || 'Update failed');
-                }
-
-                alert('Student updated successfully!');
-                closeModal('editModal');
-                await loadStudents();
-            } catch (err) {
-                console.error('Error updating student:', err);
-                alert('Failed to update student: ' + err.message);
-            }
-        });
-
-        // ============================================================================
-        // MODAL FUNCTIONS
-        // ============================================================================
-        function openEnrollModal() {
-            document.getElementById('enrollModal').classList.add('active');
-            document.getElementById('enroll-form-view').style.display = 'block';
-            document.getElementById('enroll-success-view').style.display = 'none';
-        }
-
-        function openTransferModal() {
-            document.getElementById('transferModal').classList.add('active');
-            document.getElementById('transfer-form-view').style.display = 'block';
-            document.getElementById('transfer-success-view').style.display = 'none';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        // ============================================================================
-        // ENROLL STUDENT FORM - EXPANDED WITH ALL FIELDS
-        // ============================================================================
-        document.getElementById('enroll-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('enroll-btn');
-            
-            // Student Information
-            const fullName = document.getElementById('s-name').value.trim();
-            const dobValue = document.getElementById('s-dob').value;
-            const gender = document.getElementById('s-gender').value;
-            const standard = document.getElementById('s-standard').value;
-            const schoolName = document.getElementById('s-school').value.trim();
-            const level = document.getElementById('s-level').value;
-            
-            // Parent Information
-            const fatherName = document.getElementById('s-father-name').value.trim();
-            const fatherPhone = document.getElementById('s-father-phone').value.trim();
-            const motherName = document.getElementById('s-mother-name').value.trim();
-            const motherPhone = document.getElementById('s-mother-phone').value.trim();
-            const primaryContact = document.getElementById('s-primary-contact').value;
-
-            // Validate all required fields
-            if (!fullName || !dobValue || !gender || !standard || !schoolName || !level || 
-                !fatherName || !fatherPhone || !motherName || !motherPhone) {
-                alert("All fields marked with * are required.");
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerText = "Creating Account...";
-
-            try {
-                const { data: { session } } = await supabase_client.auth.getSession();
-                const parentUnitId = sessionStorage.getItem('userId');
-
-                // Step 1: Call manage-student to create student with all information
-                const { data, error } = await supabase_client.functions.invoke('manage_student', {
-                    body: { 
-                        action: 'create_student', 
-                        full_name: fullName,
-                        date_of_birth: dobValue,
-                        gender: gender,
-                        standard: standard,
-                        school_name: schoolName,
-                        current_level: level,
-                        father_name: fatherName,
-                        father_phone: fatherPhone,
-                        mother_name: motherName,
-                        mother_phone: motherPhone,
-                        primary_contact: primaryContact,
-                        parent_unit_id: parentUnitId
-                    },
+                await supabase_client.functions.invoke('create-student-user', {
+                    body: { full_name: fullName, student_code: data.student_code, unit_code: data.unit_code || centerCode },
                     headers: { Authorization: `Bearer ${session.access_token}` }
                 });
+            } catch (e2) { console.warn('Auth user creation warning:', e2); }
 
-                if (error || (data && data.error)) throw new Error(data?.error || error?.message || 'Enrollment failed');
+            // Show success
+            document.getElementById('enroll-form-wrap').style.display = 'none';
+            document.getElementById('enroll-success').style.display = 'block';
+            document.getElementById('enroll-creds').innerText =
+                `✅ ENROLLED SUCCESSFULLY!\n\n` +
+                `=== LOGIN CREDENTIALS ===\n` +
+                `Student ID : ${data.student_code}\n` +
+                `Username   : ${data.email}\n` +
+                `Password   : ${data.password}\n\n` +
+                `=== STUDENT INFO ===\n` +
+                `Name    : ${fullName}\n` +
+                `Gender  : ${gender}\n` +
+                `Grade   : ${standard}\n` +
+                `School  : ${school}\n` +
+                `Level   : ${level}\n` +
+                `DOB     : ${dob}\n\n` +
+                `=== PARENT INFO ===\n` +
+                `Father  : ${fatherName} · ${fatherPhone}\n` +
+                `Mother  : ${motherName} · ${motherPhone}\n` +
+                `Primary : ${primaryContact}`;
 
-                // Step 2: Create auth user using edge function
-                try {
-                    const createUserResponse = await supabase_client.functions.invoke('create-student-user', {
-                        body: { 
-                            full_name: fullName,
-                            student_code: data.student_code,
-                            unit_code: data.unit_code || 'UNIT001'
-                        },
-                        headers: { Authorization: `Bearer ${session.access_token}` }
-                    });
+        } catch (err) {
+            console.error(err);
+            alert('Enrollment Error: ' + err.message);
+            btn.disabled = false;
+            btn.innerText = 'Generate ID & Enroll';
+        }
+    });
 
-                    if (!createUserResponse.error && createUserResponse.data?.success) {
-                        console.log('Auth user created successfully for student');
-                    }
-                } catch (authErr) {
-                    console.warn('Warning: Could not auto-create auth user, but student record created:', authErr);
-                }
+    // Transfer form
+    document.getElementById('transfer-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('transfer-btn');
+        const studentCode = document.getElementById('t-student-id').value.trim();
+        const dob = document.getElementById('t-dob').value;
+        if (!studentCode || !dob) { alert('Both fields required.'); return; }
+        btn.disabled = true;
+        btn.innerText = 'Verifying…';
+        try {
+            const { data: { session }, error: sErr } = await supabase_client.auth.getSession();
+            if (sErr || !session) throw new Error('Session expired. Please login again.');
+            const { data, error } = await supabase_client.functions.invoke(MANAGE_FN, {
+                body: { action: 'transfer_student', student_code: studentCode, date_of_birth: dob, current_unit_id: currentUnitId },
+                headers: { Authorization: `Bearer ${session.access_token}` }
+            });
+            if (error || data?.error) throw new Error(data?.error || error?.message);
+            document.getElementById('transfer-form-wrap').style.display = 'none';
+            document.getElementById('transfer-success').style.display = 'block';
+            document.getElementById('transfer-msg').innerText = data.message || 'Student transferred successfully!';
+        } catch (err) {
+            alert('Transfer Error: ' + err.message);
+            btn.disabled = false;
+            btn.innerText = 'Verify & Transfer In';
+        }
+    });
 
-                // Show success view with complete information
-                document.getElementById('enroll-form-view').style.display = 'none';
-                document.getElementById('enroll-success-view').style.display = 'block';
-                document.getElementById('enroll-creds-output').innerText = 
-                    `✅ STUDENT ENROLLED SUCCESSFULLY!\n\n` +
-                    `=== LOGIN CREDENTIALS ===\n` +
-                    `Student ID: ${data.student_code}\n` +
-                    `Username: ${data.email}\n` +
-                    `Password: ${data.password}\n\n` +
-                    `=== STUDENT INFORMATION ===\n` +
-                    `Name: ${fullName}\n` +
-                    `Gender: ${gender.toUpperCase()}\n` +
-                    `Standard: Grade ${standard}\n` +
-                    `School: ${schoolName}\n` +
-                    `UCMAS Level: Level ${level}\n` +
-                    `Date of Birth: ${dobValue}\n\n` +
-                    `=== PARENT/GUARDIAN INFORMATION ===\n` +
-                    `Father: ${fatherName}\n` +
-                    `Father Phone: ${fatherPhone}\n` +
-                    `Mother: ${motherName}\n` +
-                    `Mother Phone: ${motherPhone}\n` +
-                    `Primary Contact: ${primaryContact.toUpperCase()}\n\n` +
-                    `(Auth user created automatically)`;
+    // ============================================================
+    // PAYMENTS (stored in Supabase table 'payments' or locally)
+    // ============================================================
+    function loadPayments() {
+        // Try loading from supabase 'payments' table; fall back to empty
+        supabase_client.from('payments').select('*').eq('unit_id', currentUnitId)
+            .then(({ data }) => {
+                allPayments = data || [];
+                renderPayments(allPayments);
+                updatePaymentStats(allPayments);
+                populateMonthFilter();
+            }).catch(() => {
+                allPayments = [];
+                renderPayments([]);
+                updatePaymentStats([]);
+            });
+    }
 
-            } catch (err) {
-                console.error('Enrollment error:', err);
-                const errorMsg = err.message || 'Unknown error occurred';
-                alert("Enrollment Error: " + errorMsg);
-                btn.disabled = false;
-                btn.innerText = "Generate ID & Enroll";
-            }
-        });
+    function renderPayments(list) {
+        const tbody = document.getElementById('tbl-payments');
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><div class="empty-state-icon">💳</div><p class="empty-state-text">No payments recorded yet.</p></td></tr>';
+            return;
+        }
+        tbody.innerHTML = list.map(p => {
+            const statusClass = p.status === 'paid' ? 'pay-status-paid' : p.status === 'due' ? 'pay-status-due' : 'pay-status-partial';
+            const badge = p.status === 'paid' ? 'badge-green' : p.status === 'due' ? 'badge-red' : 'badge-amber';
+            return `<tr>
+                <td class="font-semibold text-gray-900">${p.student_name || '—'}</td>
+                <td class="mono text-sm text-gray-600">${p.student_code || '—'}</td>
+                <td class="text-gray-700">${p.month || '—'}</td>
+                <td class="text-right font-bold text-gray-900">₹${Number(p.amount||0).toLocaleString('en-IN')}</td>
+                <td class="text-center"><span class="badge ${badge}">${p.status}</span></td>
+                <td class="text-gray-600 text-sm">${p.paid_on ? new Date(p.paid_on).toLocaleDateString('en-IN') : '—'}</td>
+                <td class="text-gray-600 text-sm capitalize">${p.method || '—'}</td>
+                <td class="text-center">
+                    <button class="btn-edit" onclick="deletePayment('${p.id}')">Delete</button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
 
-        // ============================================================================
-        // TRANSFER STUDENT FORM
-        // ============================================================================
-        document.getElementById('transfer-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('transfer-btn');
-            const studentCode = document.getElementById('t-student-id').value.trim();
-            const dobValue = document.getElementById('t-dob').value;
+    function updatePaymentStats(list) {
+        const collected = list.filter(p => p.status === 'paid').reduce((a, p) => a + Number(p.amount||0), 0);
+        const pending = list.filter(p => p.status !== 'paid').reduce((a, p) => a + Number(p.amount||0), 0);
+        const total = list.reduce((a, p) => a + Number(p.amount||0), 0);
+        document.getElementById('pay-collected').innerText = '₹' + collected.toLocaleString('en-IN');
+        document.getElementById('pay-pending').innerText = '₹' + pending.toLocaleString('en-IN');
+        document.getElementById('pay-total').innerText = '₹' + total.toLocaleString('en-IN');
+    }
 
-            if (!studentCode || !dobValue) {
-                alert("Both fields are required for verification.");
-                return;
-            }
+    function populateMonthFilter() {
+        const months = [...new Set(allPayments.map(p => p.month).filter(Boolean))];
+        const sel = document.getElementById('pay-month-filter');
+        sel.innerHTML = '<option value="">All Months</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
+    }
 
-            btn.disabled = true;
-            btn.innerText = "Verifying & Claiming...";
+    function filterPayments() {
+        const month = document.getElementById('pay-month-filter').value;
+        const filtered = month ? allPayments.filter(p => p.month === month) : allPayments;
+        renderPayments(filtered);
+        updatePaymentStats(filtered);
+    }
 
-            try {
-                const currentUnitId = sessionStorage.getItem('userId');
-                const { data: { session }, error: sessionError } = await supabase_client.auth.getSession();
+    function populateStudentSelect() {
+        const sel = document.getElementById('pay-student-id');
+        sel.innerHTML = '<option value="">Select student…</option>' +
+            allStudents.map(s => `<option value="${s.id}" data-code="${s.student_code}" data-name="${s.full_name}">${s.full_name} (${s.student_code || 'ID pending'})</option>`).join('');
+    }
 
-                if (sessionError || !session) {
-                    throw new Error('Session expired. Please login again.');
-                }
+    document.getElementById('payment-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('pay-btn');
+        const studentSel = document.getElementById('pay-student-id');
+        const selectedOpt = studentSel.options[studentSel.selectedIndex];
+        const payload = {
+            unit_id: currentUnitId,
+            student_id: studentSel.value,
+            student_name: selectedOpt.dataset.name || '',
+            student_code: selectedOpt.dataset.code || '',
+            month: document.getElementById('pay-month').value,
+            amount: parseFloat(document.getElementById('pay-amount').value) || 0,
+            status: document.getElementById('pay-status').value,
+            method: document.getElementById('pay-method').value,
+            paid_on: document.getElementById('pay-date').value || null,
+            notes: document.getElementById('pay-notes').value || null
+        };
+        if (!payload.student_id || !payload.month || !payload.amount) {
+            alert('Student, month and amount are required.'); return;
+        }
+        btn.disabled = true;
+        btn.innerText = 'Saving…';
+        try {
+            const { error } = await supabase_client.from('payments').insert([payload]);
+            if (error) throw error;
+            alert('Payment recorded!');
+            closeModal('addPaymentModal');
+            document.getElementById('payment-form').reset();
+            loadPayments();
+        } catch (err) {
+            alert('Failed to record payment: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Record Payment';
+        }
+    });
 
-                const { data, error } = await supabase_client.functions.invoke('manage_student', {
-                    body: { 
-                        action: 'transfer_student', 
-                        student_code: studentCode,
-                        date_of_birth: dobValue,
-                        current_unit_id: currentUnitId
-                    },
-                    headers: { Authorization: `Bearer ${session.access_token}` }
-                });
+    async function deletePayment(id) {
+        if (!confirm('Delete this payment record?')) return;
+        const { error } = await supabase_client.from('payments').delete().eq('id', id);
+        if (error) { alert('Delete failed: ' + error.message); return; }
+        loadPayments();
+    }
 
-                if (error) {
-                    console.error('Edge function error:', error);
-                    throw new Error(error.message || 'Transfer failed');
-                }
+    // ============================================================
+    // BATCHES (stored in 'batches' table)
+    // ============================================================
+    function loadBatches() {
+        supabase_client.from('batches').select('*').eq('unit_id', currentUnitId)
+            .then(({ data }) => {
+                allBatches = data || [];
+                document.getElementById('stat-batches').innerText = allBatches.length;
+                renderBatches(allBatches);
+                populateCISelect();
+            }).catch(() => { allBatches = []; renderBatches([]); });
+    }
 
-                if (data && data.error) {
-                    throw new Error(data.error);
-                }
+    function renderBatches(list) {
+        const container = document.getElementById('batches-container');
+        if (!list.length) {
+            container.innerHTML = '<div class="empty-state col-span-3"><div class="empty-state-icon">📅</div><p class="empty-state-text">No batches created yet.</p></div>';
+            return;
+        }
+        container.innerHTML = list.map(b => `
+            <div class="batch-card">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="font-black text-gray-900 text-base">${b.name}</h3>
+                        <p class="text-xs text-gray-500 font-semibold mt-0.5">${b.level || '—'}</p>
+                    </div>
+                    <span class="badge badge-purple">${b.days || '—'}</span>
+                </div>
+                <div class="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                    <span>⏰ ${b.start_time || '—'} – ${b.end_time || '—'}</span>
+                    <span>👥 0 / ${b.capacity || 15}</span>
+                </div>
+                ${b.ci_name ? `<p class="text-xs font-semibold text-gray-500">CI: ${b.ci_name}</p>` : ''}
+                <div class="flex gap-2 mt-4">
+                    <button class="btn-edit" onclick="deleteBatch('${b.id}')">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    }
 
-                // Show success view
-                document.getElementById('transfer-form-view').style.display = 'none';
-                document.getElementById('transfer-success-view').style.display = 'block';
-                document.getElementById('transfer-success-message').innerText = data.message || 'Student transferred successfully!';
+    document.getElementById('batch-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('batch-btn');
+        const selectedDays = [...document.querySelectorAll('input[name="b-day"]:checked')].map(c => c.value).join(', ');
+        if (!selectedDays) { alert('Please select at least one day.'); return; }
+        const ciSel = document.getElementById('b-ci');
+        const ciOpt = ciSel.options[ciSel.selectedIndex];
+        const payload = {
+            unit_id: currentUnitId,
+            name: document.getElementById('b-name').value.trim(),
+            level: document.getElementById('b-level').value,
+            capacity: parseInt(document.getElementById('b-capacity').value) || 15,
+            days: selectedDays,
+            start_time: document.getElementById('b-start').value,
+            end_time: document.getElementById('b-end').value,
+            ci_id: ciSel.value || null,
+            ci_name: ciOpt.value ? ciOpt.text : null
+        };
+        btn.disabled = true; btn.innerText = 'Creating…';
+        try {
+            const { error } = await supabase_client.from('batches').insert([payload]);
+            if (error) throw error;
+            alert('Batch created!');
+            closeModal('addBatchModal');
+            document.getElementById('batch-form').reset();
+            loadBatches();
+        } catch (err) {
+            alert('Failed: ' + err.message);
+        } finally { btn.disabled = false; btn.innerText = 'Create Batch'; }
+    });
 
-            } catch (err) {
-                console.error('Transfer error:', err);
-                alert("Transfer Error: " + (err.message || 'Unknown error'));
-                btn.disabled = false;
-                btn.innerText = "Verify & Transfer In";
-            }
-        });
+    async function deleteBatch(id) {
+        if (!confirm('Delete this batch?')) return;
+        const { error } = await supabase_client.from('batches').delete().eq('id', id);
+        if (error) { alert('Delete failed: ' + error.message); return; }
+        loadBatches();
+    }
 
-        // ============================================================================
-        // INITIALIZE ON PAGE LOAD
-        // ============================================================================
-        init();
+    // ============================================================
+    // COURSE INSTRUCTORS
+    // ============================================================
+    function loadCIs() {
+        supabase_client.from('profiles').select('*')
+            .eq('role', 'teacher')
+            .eq('current_unit_id', currentUnitId)
+            .then(({ data }) => {
+                allCIs = data || [];
+                document.getElementById('stat-ci').innerText = allCIs.length;
+                renderCIs(allCIs);
+                populateCISelect();
+            }).catch(() => { allCIs = []; renderCIs([]); });
+    }
+
+    function renderCIs(list) {
+        const tbody = document.getElementById('tbl-ci');
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><div class="empty-state-icon">👨‍🏫</div><p class="empty-state-text">No course instructors added yet.</p></td></tr>';
+            return;
+        }
+        tbody.innerHTML = list.map(ci => `
+            <tr>
+                <td class="font-bold text-gray-900">${ci.full_name || '—'}</td>
+                <td class="mono text-sm text-gray-600">${ci.email || '—'}</td>
+                <td><span class="pw mono text-sm font-bold bg-gray-100 px-2 py-1 rounded-lg" onclick="this.classList.toggle('show')">${ci.password || 'Welcome@123'}</span></td>
+                <td class="text-gray-600 text-sm">—</td>
+                <td class="text-center">
+                    ${ci.is_active !== false
+                        ? '<span class="badge badge-green">Active</span>'
+                        : '<span class="badge badge-red">Inactive</span>'}
+                </td>
+                <td>
+                    <div class="flex gap-2 justify-center">
+                        <button class="btn-danger" onclick="deleteCI('${ci.id}')">Remove</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function populateCISelect() {
+        const sel = document.getElementById('b-ci');
+        const prev = sel.value;
+        sel.innerHTML = '<option value="">No CI (optional)</option>' +
+            allCIs.map(ci => `<option value="${ci.id}">${ci.full_name}</option>`).join('');
+        sel.value = prev;
+    }
+
+    document.getElementById('ci-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('ci-btn');
+        const name = document.getElementById('ci-name').value.trim();
+        let code = document.getElementById('ci-code').value.trim().toLowerCase();
+        const phone = document.getElementById('ci-phone').value.trim();
+        const qual = document.getElementById('ci-qual').value.trim();
+
+        if (!name) { alert('Name is required.'); return; }
+        if (!code) code = centerCode.toLowerCase() + '.ci';
+
+        btn.disabled = true; btn.innerText = 'Creating…';
+        try {
+            const { data: { session } } = await supabase_client.auth.getSession();
+            // Call the create-uf-user or a generic create-user edge function
+            // We'll use create-student-user pattern but with CI role
+            const email = `${code}@ucmas.in`;
+            const password = 'Welcome@123';
+
+            // Insert into profiles directly (if edge fn not available, create auth user via manage-student)
+            const { data, error } = await supabase_client.functions.invoke('create-student-user', {
+                body: { full_name: name, student_code: code, unit_code: centerCode, role: 'teacher', phone, qualification: qual },
+                headers: { Authorization: `Bearer ${session.access_token}` }
+            });
+            if (error || data?.error) throw new Error(data?.error || error?.message || 'CI creation failed');
+
+            document.getElementById('ci-form-wrap').style.display = 'none';
+            document.getElementById('ci-success').style.display = 'block';
+            document.getElementById('ci-creds').innerText =
+                `CI ACCOUNT CREATED!\n\nName     : ${name}\nEmail    : ${email}\nPassword : ${password}\n\nShare these credentials with the instructor.`;
+
+        } catch (err) {
+            alert('Failed to create CI: ' + err.message);
+            btn.disabled = false; btn.innerText = 'Create CI Account';
+        }
+    });
+
+    async function deleteCI(id) {
+        if (!confirm('Remove this CI from your center?')) return;
+        const { error } = await supabase_client.from('profiles').update({ current_unit_id: null }).eq('id', id);
+        if (error) { alert('Failed: ' + error.message); return; }
+        loadCIs();
+    }
+
+    // ============================================================
+    // BOOT
+    // ============================================================
+    init();
     </script>
-    <footer style="
-            text-align: center;
-            padding: 18px 20px;
-            margin-top: 40px;
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.15);
-            color: rgba(255,255,255,0.7);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            letter-spacing: 0.5px;
-        ">
-            © 2026 Developed by <span style="
-            color: #fff;
-            font-weight: 700;
-            ">Practice Buddy</span>. All rights reserved.
-        </footer>
+
+    <footer style="text-align:center; padding:18px 20px; margin-top:40px; background:rgba(255,255,255,0.06); backdrop-filter:blur(10px); border-top:1px solid rgba(255,255,255,0.12); color:rgba(0,0,0,0.4); font-family:'DM Sans',sans-serif; font-size:13px;">
+        © 2026 Developed by <strong style="color:rgba(0,0,0,0.7)">Practice Buddy</strong>. All rights reserved.
+    </footer>
+
 </body>
 </html>
