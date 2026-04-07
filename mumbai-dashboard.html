@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UCMAS Mumbai - Regional Command Center</title>
+    <title>UCMAS Mumbai - Regional Command Center (Updated)</title>
 
     <script>
         if (sessionStorage.getItem('userRole') !== 'mumbai_ho') {
@@ -18,20 +18,7 @@
     <style>
         body { 
             font-family: 'DM Sans', sans-serif; 
-            min-height: 100vh;
-            margin: 0;
-            /* Base white background */
-            background-color: #ffffff;
-            /* Multi-layer gradient matching the Franchise Meet theme */
-            background-image: 
-                /* Subtle technical grid overlay */
-                linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px),
-                /* Top-Right Indigo/Blue Glow */
-                radial-gradient(circle at 100% 0%, #1a2a7b 0%, rgba(26, 42, 123, 0.4) 30%, transparent 70%),
-                /* Bottom-Left Vibrant Red Glow */
-                radial-gradient(circle at 0% 100%, #e31e24 0%, rgba(227, 30, 36, 0.3) 30%, transparent 70%);
-            background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             background-attachment: fixed;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
@@ -78,13 +65,6 @@
         }
         .status-toggle.active::after { transform: translateX(24px); }
         
-        .password-field { 
-            filter: blur(4px); 
-            transition: filter 0.3s;
-            cursor: pointer;
-        }
-        .password-field.visible { filter: blur(0); }
-        
         table { border-collapse: separate; border-spacing: 0; }
         tbody tr { transition: all 0.2s; }
         tbody tr:hover { background: #f9fafb; transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -103,33 +83,6 @@
         .edit-btn { background: #3b82f6; color: white; }
         .edit-btn:hover { background: #2563eb; }
         
-        /* Pagination */
-        .pagination-btn {
-            padding: 8px 12px;
-            border: 2px solid #e5e7eb;
-            background: white;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .pagination-btn:hover:not(:disabled) { 
-            background: #667eea; 
-            color: white; 
-            border-color: #667eea;
-        }
-        .pagination-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .pagination-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
-        }
-        
-        /* Filters */
         .filter-select {
             padding: 10px 16px;
             border: 2px solid #e5e7eb;
@@ -146,6 +99,17 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
+        .stat-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin: 4px;
+        }
+
         .export-btn {
             padding: 10px 20px;
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -176,7 +140,7 @@
                         <div class="h-16 w-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg">U</div>
                         <div>
                             <h1 class="text-4xl font-black text-gray-900 tracking-tight">CBS Education</h1>
-                            <p class="text-sm font-bold text-purple-600 uppercase tracking-wider">UCMAS Mumbai Command Center</p>
+                            <p class="text-sm font-bold text-purple-600 uppercase tracking-wider">UCMAS Mumbai Command Center (Updated)</p>
                         </div>
                     </div>
                 </div>
@@ -189,7 +153,7 @@
         </header>
 
         <!-- Stats Dashboard -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
             <div class="glass-card p-6 rounded-2xl border-l-4 border-blue-500">
                 <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Platform Status</p>
                 <h3 class="text-2xl font-black text-blue-600">Production Live</h3>
@@ -202,9 +166,13 @@
                 <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Unit Heads (UF)</p>
                 <h3 id="stat-uf" class="text-4xl font-black text-gray-900">0</h3>
             </div>
+            <div class="glass-card p-6 rounded-2xl border-l-4 border-red-500">
+                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Dropouts</p>
+                <h3 id="stat-dropouts" class="text-4xl font-black text-gray-900">0</h3>
+            </div>
             <div class="glass-card p-6 rounded-2xl border-l-4 border-purple-500">
-                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Active Status</p>
-                <h3 id="stat-active" class="text-4xl font-black text-gray-900">0%</h3>
+                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Repeated Students</p>
+                <h3 id="stat-repeated" class="text-4xl font-black text-gray-900">0</h3>
             </div>
         </div>
 
@@ -212,10 +180,13 @@
         <div class="glass-card rounded-3xl p-6 mb-8">
             <div class="flex gap-4 flex-wrap">
                 <button id="tab-uf" class="tab-button active px-8 py-3 font-bold text-gray-700 rounded-xl" onclick="switchTab('uf')">
-                    Unit Franchisees (UF)
+                    Unit Franchisees
                 </button>
                 <button id="tab-students" class="tab-button px-8 py-3 font-bold text-gray-700 rounded-xl" onclick="switchTab('students')">
-                    Students
+                    Students (Advanced Filters)
+                </button>
+                <button id="tab-dropouts" class="tab-button px-8 py-3 font-bold text-gray-700 rounded-xl" onclick="switchTab('dropouts')">
+                    Dropout Tracking
                 </button>
             </div>
         </div>
@@ -236,9 +207,15 @@
                 </div>
 
                 <!-- Filters -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                     <input type="text" id="filter-uf-name" placeholder="Search by name..." class="filter-select" onkeyup="filterData('uf', 'full_name', this.value)">
                     <input type="text" id="filter-uf-email" placeholder="Search by email..." class="filter-select" onkeyup="filterData('uf', 'email', this.value)">
+                    <select id="filter-uf-class" class="filter-select" onchange="filterData('uf', 'uf_class', this.value)">
+                        <option value="">All Classes</option>
+                        <option value="A">Class A</option>
+                        <option value="B">Class B</option>
+                        <option value="C">Class C</option>
+                    </select>
                     <select id="filter-uf-status" class="filter-select" onchange="filterData('uf', 'is_active', this.value)">
                         <option value="">All Status</option>
                         <option value="true">Active</option>
@@ -251,52 +228,65 @@
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="bg-gradient-to-r from-indigo-50 to-purple-50 border-b-2 border-gray-200">
-                                <th class="text-left px-6 py-4 font-black text-gray-700 cursor-pointer" onclick="sortTable('uf', 'full_name')">Name ↕</th>
+                                <th class="text-left px-6 py-4 font-black text-gray-700">Name</th>
                                 <th class="text-left px-6 py-4 font-black text-gray-700">Center Code</th>
                                 <th class="text-left px-6 py-4 font-black text-gray-700">Email</th>
-                                <th class="text-left px-6 py-4 font-black text-gray-700">Password</th>
+                                <th class="text-center px-6 py-4 font-black text-gray-700">Class</th>
                                 <th class="text-left px-6 py-4 font-black text-gray-700">City</th>
+                                <th class="text-center px-6 py-4 font-black text-gray-700">Active Students</th>
                                 <th class="text-center px-6 py-4 font-black text-gray-700">Status</th>
                                 <th class="text-center px-6 py-4 font-black text-gray-700">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="table-uf">
                             <tr class="text-center py-8">
-                                <td colspan="7" class="py-8 text-gray-500">Loading...</td>
+                                <td colspan="8" class="py-8 text-gray-500">Loading...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Pagination -->
-                <div id="pagination-uf" class="mt-8 flex justify-center items-center gap-3"></div>
             </div>
         </div>
 
-        <!-- Students Tab -->
+        <!-- Students Tab with Advanced Filters -->
         <div id="content-students" class="tab-content">
             <div class="glass-card rounded-3xl p-8 mb-8">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-3xl font-black text-gray-900">Students</h2>
+                    <h2 class="text-3xl font-black text-gray-900">Students (Advanced Filters)</h2>
                     <button onclick="exportToCSV('students')" class="export-btn">
                         📥 Export to CSV
                     </button>
                 </div>
 
-                <!-- Filters -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <!-- Advanced Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
                     <input type="text" id="filter-students-name" placeholder="Search by name..." class="filter-select" onkeyup="filterData('students', 'full_name', this.value)">
                     <input type="text" id="filter-students-code" placeholder="Search by Student ID..." class="filter-select" onkeyup="filterData('students', 'student_code', this.value)">
-                    <select id="filter-students-level" class="filter-select" onchange="filterData('students', 'current_level', this.value)">
+                    <select id="filter-students-level" class="filter-select" onchange="applyAdvancedFilter('level', this.value)">
                         <option value="">All Levels</option>
-                        <option value="Level 1">Level 1</option>
-                        <option value="Level 2">Level 2</option>
-                        <option value="Level 3">Level 3</option>
+                        <option value="0">Level 0 (Foundation)</option>
+                        <option value="1">Level 1</option>
+                        <option value="2">Level 2</option>
+                        <option value="3">Level 3</option>
+                        <option value="4">Level 4</option>
+                        <option value="5">Level 5</option>
+                        <option value="6">Level 6</option>
+                        <option value="7">Level 7</option>
+                        <option value="8">Level 8</option>
+                        <option value="9">Level 9</option>
+                        <option value="10">Level 10</option>
                     </select>
-                    <select id="filter-students-status" class="filter-select" onchange="filterData('students', 'is_active', this.value)">
-                        <option value="">All Status</option>
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
+                    <select id="filter-students-age" class="filter-select" onchange="applyAdvancedFilter('age', this.value)">
+                        <option value="">All Ages</option>
+                        <option value="5-8">5-8 Years</option>
+                        <option value="8-12">8-12 Years</option>
+                        <option value="12-16">12-16 Years</option>
+                        <option value="16+">16+ Years</option>
+                    </select>
+                    <select id="filter-students-repeated" class="filter-select" onchange="applyAdvancedFilter('repeated', this.value)">
+                        <option value="">All Students</option>
+                        <option value="true">Repeated Only</option>
+                        <option value="false">New Only</option>
                     </select>
                 </div>
 
@@ -305,63 +295,86 @@
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="bg-gradient-to-r from-indigo-50 to-purple-50 border-b-2 border-gray-200">
-                                <th class="text-left px-6 py-4 font-black text-gray-700 cursor-pointer" onclick="sortTable('students', 'full_name')">Name ↕</th>
+                                <th class="text-left px-6 py-4 font-black text-gray-700">Name</th>
                                 <th class="text-left px-6 py-4 font-black text-gray-700">Student ID</th>
                                 <th class="text-left px-6 py-4 font-black text-gray-700">Unit Code</th>
-                                <th class="text-left px-6 py-4 font-black text-gray-700">Password</th>
-                                <th class="text-left px-6 py-4 font-black text-gray-700 cursor-pointer" onclick="sortTable('students', 'state')">State ↕</th>
-                                <th class="text-left px-6 py-4 font-black text-gray-700 cursor-pointer" onclick="sortTable('students', 'current_level')">Level ↕</th>
+                                <th class="text-left px-6 py-4 font-black text-gray-700">Level</th>
+                                <th class="text-left px-6 py-4 font-black text-gray-700">Age</th>
+                                <th class="text-center px-6 py-4 font-black text-gray-700">Repeated</th>
                                 <th class="text-center px-6 py-4 font-black text-gray-700">Status</th>
-                                <th class="text-center px-6 py-4 font-black text-gray-700">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="table-students">
                             <tr class="text-center py-8">
-                                <td colspan="8" class="py-8 text-gray-500">Loading...</td>
+                                <td colspan="7" class="py-8 text-gray-500">Loading...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Pagination -->
-                <div id="pagination-students" class="mt-8 flex justify-center items-center gap-3"></div>
             </div>
         </div>
-    </div>
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="glass-card rounded-3xl p-8 max-w-md w-full">
-            <h2 class="text-2xl font-black text-gray-900 mb-6">Edit User</h2>
-            
-            <form id="edit-form" class="space-y-4">
-                <input type="hidden" id="edit-user-id">
-                <input type="hidden" id="edit-user-role">
-                
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
-                    <input type="text" id="edit-name" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600" required>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Email</label>
-                    <input type="email" id="edit-email" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600" required>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Password (leave blank to keep current)</label>
-                    <input type="password" id="edit-password" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600">
-                </div>
-                
-                <div class="flex gap-4 mt-6">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg transition-all">
-                        Save Changes
-                    </button>
-                    <button type="button" onclick="closeModal()" class="flex-1 px-6 py-3 bg-gray-300 text-gray-800 font-bold rounded-lg hover:bg-gray-400 transition-all">
-                        Cancel
+        <!-- Dropout Tracking Tab -->
+        <div id="content-dropouts" class="tab-content">
+            <div class="glass-card rounded-3xl p-8 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-black text-gray-900">Dropout Tracking</h2>
+                    <button onclick="exportToCSV('dropouts')" class="export-btn">
+                        📥 Export to CSV
                     </button>
                 </div>
-            </form>
+
+                <!-- Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div class="glass-card p-6 rounded-2xl">
+                        <p class="text-xs font-black text-gray-400 uppercase mb-2">Total Dropouts</p>
+                        <h3 id="dropout-total" class="text-4xl font-black text-gray-900">0</h3>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl">
+                        <p class="text-xs font-black text-gray-400 uppercase mb-2">Dropout Rate</p>
+                        <h3 id="dropout-rate" class="text-4xl font-black text-gray-900">0%</h3>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl">
+                        <p class="text-xs font-black text-gray-400 uppercase mb-2">Most Common Reason</p>
+                        <h3 id="dropout-reason" class="text-2xl font-black text-gray-900">--</h3>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <input type="text" id="filter-dropout-name" placeholder="Search by name..." class="filter-select" onkeyup="filterData('dropouts', 'full_name', this.value)">
+                    <select id="filter-dropout-level" class="filter-select" onchange="filterData('dropouts', 'dropout_level', this.value)">
+                        <option value="">All Dropout Levels</option>
+                        <option value="0">Level 0</option>
+                        <option value="1">Level 1</option>
+                        <option value="2">Level 2</option>
+                        <option value="3">Level 3</option>
+                        <option value="4">Level 4</option>
+                        <option value="5">Level 5</option>
+                    </select>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gradient-to-r from-indigo-50 to-purple-50 border-b-2 border-gray-200">
+                                <th class="text-left px-6 py-4 font-black text-gray-700">Student Name</th>
+                                <th class="text-left px-6 py-4 font-black text-gray-700">Student ID</th>
+                                <th class="text-left px-6 py-4 font-black text-gray-700">Unit</th>
+                                <th class="text-center px-6 py-4 font-black text-gray-700">Dropout Level</th>
+                                <th class="text-left px-6 py-4 font-black text-gray-700">Reason</th>
+                                <th class="text-left px-6 py-4 font-black text-gray-700">Enrollment Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-dropouts">
+                            <tr class="text-center py-8">
+                                <td colspan="6" class="py-8 text-gray-500">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -369,7 +382,7 @@
     <div id="addUFModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div class="glass-card rounded-3xl p-8 max-w-md w-full">
             <h2 class="text-2xl font-black text-gray-900 mb-2">Add New Unit Franchisee</h2>
-            <p class="text-sm text-gray-600 mb-6">Username & password auto-generated</p>
+            <p class="text-sm text-gray-600 mb-6">Select class and auto-generated credentials will be shown</p>
             
             <form id="add-uf-form" class="space-y-4">
                 <div>
@@ -380,7 +393,6 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Center Code</label>
                     <input type="text" id="uf-center-code" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600 uppercase" placeholder="e.g., MH238" required>
-                    <p class="text-xs text-gray-500 mt-1">Username will be: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4e2d2b203a2b3c2d212a2b0e3b2d232f3d602720">[email&#160;protected]</a></p>
                 </div>
 
                 <div>
@@ -388,10 +400,21 @@
                     <input type="text" id="uf-city" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600" placeholder="e.g., Mumbai" required>
                 </div>
 
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">🔷 Class Selection</label>
+                    <select id="uf-class" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-600" required>
+                        <option value="">Select Class...</option>
+                        <option value="A">Class A</option>
+                        <option value="B">Class B</option>
+                        <option value="C">Class C</option>
+                    </select>
+                </div>
+
                 <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
                     <p class="text-xs font-bold text-blue-700">Auto-Generated Details:</p>
-                    <p class="text-xs text-blue-600 mt-2">Email: <span id="generated-email" class="font-mono font-bold"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bcdfd9d2c8d9cedfd3d8d9fcc9dfd1ddcf92d5d2">[email&#160;protected]</a></span></p>
+                    <p class="text-xs text-blue-600 mt-2">Email: <span id="generated-email" class="font-mono font-bold">centercode@ucmas.in</span></p>
                     <p class="text-xs text-blue-600">Password: <span class="font-mono font-bold">Welcome@123</span></p>
+                    <p class="text-xs text-blue-600">Class: <span id="generated-class" class="font-mono font-bold">--</span></p>
                 </div>
                 
                 <div class="flex gap-4 mt-6">
@@ -406,7 +429,7 @@
         </div>
     </div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    <script>
         // Initialize Supabase Client - MUMBAI CONFIGURATION
         const supabase_client = supabase.createClient(
             'https://offdxndcnsiejmwdznwb.supabase.co',
@@ -429,41 +452,19 @@
         // Data store
         const dataStore = {
             uf: [],
-            students: []
+            students: [],
+            dropouts: []
         };
 
         const filteredData = {
             uf: [],
-            students: []
+            students: [],
+            dropouts: []
         };
-
-        const currentPage = {
-            uf: 1,
-            students: 1
-        };
-
-        const itemsPerPage = 10;
 
         // Initialize
         async function init() {
             try {
-                const { data: { session } } = await supabase_client.auth.getSession();
-                if (!session) {
-                    window.location.replace('index.html');
-                    return;
-                }
-
-                // Get user info
-                const { data: userData } = await supabase_client
-                    .from('users')
-                    .select('full_name')
-                    .eq('id', session.user.id)
-                    .single();
-
-                if (userData) {
-                    document.getElementById('display-name').textContent = userData.full_name;
-                }
-
                 await loadAllData();
             } catch (error) {
                 console.error('Init error:', error);
@@ -474,25 +475,37 @@
         // Load all data
         async function loadAllData() {
             try {
+                const { data: { session } } = await supabase_client.auth.getSession();
+
                 // Load Unit Franchisees
-                const { data: ufData, error: ufError } = await supabase_client
+                const { data: ufData } = await supabase_client
                     .from('unit_franchisees')
                     .select('*')
                     .order('created_at', { ascending: false });
 
-                if (ufError) throw ufError;
                 dataStore.uf = ufData || [];
                 filteredData.uf = [...dataStore.uf];
 
                 // Load Students
-                const { data: studentData, error: studentError } = await supabase_client
-                    .from('students')
+                const { data: studentData } = await supabase_client
+                    .from('profiles')
                     .select('*')
+                    .eq('role', 'student')
                     .order('created_at', { ascending: false });
 
-                if (studentError) throw studentError;
                 dataStore.students = studentData || [];
                 filteredData.students = [...dataStore.students];
+
+                // Load Dropouts
+                const { data: dropoutData } = await supabase_client
+                    .from('profiles')
+                    .select('*')
+                    .eq('role', 'student')
+                    .eq('is_active', false)
+                    .not('dropout_reason', 'is', null);
+
+                dataStore.dropouts = dropoutData || [];
+                filteredData.dropouts = [...dataStore.dropouts];
 
                 // Update stats
                 updateStats();
@@ -500,6 +513,7 @@
                 // Render tables
                 renderTable('uf');
                 renderTable('students');
+                renderTable('dropouts');
 
             } catch (error) {
                 console.error('Load error:', error);
@@ -511,23 +525,40 @@
         function updateStats() {
             document.getElementById('stat-students').textContent = dataStore.students.length;
             document.getElementById('stat-uf').textContent = dataStore.uf.length;
+            document.getElementById('stat-dropouts').textContent = dataStore.dropouts.length;
             
-            const activeCount = dataStore.students.filter(s => s.is_active !== false).length + 
-                               dataStore.uf.filter(u => u.is_active !== false).length;
-            const totalCount = dataStore.students.length + dataStore.uf.length;
-            const activePercent = totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0;
-            document.getElementById('stat-active').textContent = activePercent + '%';
+            const repeatedCount = dataStore.students.filter(s => s.is_repeated === true).length;
+            document.getElementById('stat-repeated').textContent = repeatedCount;
+
+            // Dropout rate
+            const dropoutRate = dataStore.students.length > 0 
+                ? Math.round((dataStore.dropouts.length / dataStore.students.length) * 100) 
+                : 0;
+            document.getElementById('dropout-rate').textContent = dropoutRate + '%';
+            document.getElementById('dropout-total').textContent = dataStore.dropouts.length;
+
+            // Most common dropout reason
+            if (dataStore.dropouts.length > 0) {
+                const reasons = dataStore.dropouts.reduce((acc, d) => {
+                    const reason = d.dropout_reason || 'Not Specified';
+                    acc[reason] = (acc[reason] || 0) + 1;
+                    return acc;
+                }, {});
+                const mostCommon = Object.entries(reasons).sort((a, b) => b[1] - a[1])[0];
+                document.getElementById('dropout-reason').textContent = mostCommon[0];
+            }
         }
 
         // Filter data
         function filterData(tab, field, value) {
-            currentPage[tab] = 1;
-            
             filteredData[tab] = dataStore[tab].filter(item => {
                 if (!value) return true;
                 if (field === 'is_active') {
                     const isActive = item.is_active !== false;
                     return value === 'true' ? isActive : !isActive;
+                }
+                if (field === 'uf_class') {
+                    return item[field] === value;
                 }
                 return item[field]?.toString().toLowerCase().includes(value.toLowerCase());
             });
@@ -535,135 +566,130 @@
             renderTable(tab);
         }
 
+        // Apply advanced filters
+        function applyAdvancedFilter(type, value) {
+            if (type === 'level' && value) {
+                filteredData.students = dataStore.students.filter(s => s.current_level === parseInt(value));
+            } else if (type === 'age' && value) {
+                const today = new Date();
+                const [minAge, maxAge] = value === '5-8' ? [5, 8] : 
+                                         value === '8-12' ? [8, 12] :
+                                         value === '12-16' ? [12, 16] :
+                                         value === '16+' ? [16, 100] : [0, 100];
+
+                filteredData.students = dataStore.students.filter(s => {
+                    if (!s.date_of_birth) return false;
+                    const dob = new Date(s.date_of_birth);
+                    let age = today.getFullYear() - dob.getFullYear();
+                    if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
+                        age--;
+                    }
+                    return age >= minAge && age <= maxAge;
+                });
+            } else if (type === 'repeated' && value) {
+                filteredData.students = dataStore.students.filter(s => s.is_repeated === (value === 'true'));
+            }
+            if (!value) {
+                filteredData.students = [...dataStore.students];
+            }
+            renderTable('students');
+        }
+
         // Render table
         function renderTable(tab) {
             const data = filteredData[tab];
-            const page = currentPage[tab];
-            const start = (page - 1) * itemsPerPage;
-            const pageData = data.slice(start, start + itemsPerPage);
             
+            if (data.length === 0) {
+                document.getElementById(`table-${tab}`).innerHTML = `<tr class="text-center"><td colspan="100%" class="py-8 text-gray-500">No data found</td></tr>`;
+                return;
+            }
+
             let html = '';
             
-            if (pageData.length === 0) {
-                html = '<tr class="text-center"><td colspan="100%" class="py-8 text-gray-500">No data found</td></tr>';
-            } else {
-                pageData.forEach(item => {
+            if (tab === 'uf') {
+                html = data.map(item => {
                     const isActive = item.is_active !== false;
+                    const classColor = item.uf_class === 'A' ? 'bg-green-100 text-green-700' : 
+                                      item.uf_class === 'B' ? 'bg-blue-100 text-blue-700' : 
+                                      'bg-purple-100 text-purple-700';
                     
-                    if (tab === 'uf') {
-                        html += `
-                            <tr class="border-b border-gray-200">
-                                <td class="px-6 py-4 font-semibold text-gray-900">${item.full_name}</td>
-                                <td class="px-6 py-4 font-mono text-gray-700 font-bold">${item.email.split('@')[0].toUpperCase()}</td>
-                                <td class="px-6 py-4 text-gray-700">${item.email}</td>
-                                <td class="px-6 py-4">
-                                    <span class="password-field mono text-xs bg-gray-100 px-3 py-2 rounded cursor-pointer" onclick="togglePassword(this)">
-                                        ${item.password}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-700">${item.region || '-'}</td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="status-toggle ${isActive ? 'active' : ''}" onclick="toggleStatus('${item.id}', ${isActive}, 'uf')"></div>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <button onclick="openEditModal('${item.id}', 'unit_franchisee')" class="action-btn edit-btn">
-                                        Edit
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    } else if (tab === 'students') {
-                        html += `
-                            <tr class="border-b border-gray-200">
-                                <td class="px-6 py-4 font-semibold text-gray-900">${item.full_name}</td>
-                                <td class="px-6 py-4 text-gray-700">${item.student_code}</td>
-                                <td class="px-6 py-4 text-gray-700">${item.unit_code || '-'}</td>
-                                <td class="px-6 py-4">
-                                    <span class="password-field mono text-xs bg-gray-100 px-3 py-2 rounded cursor-pointer" onclick="togglePassword(this)">
-                                        ${item.password}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-700">${item.state || '-'}</td>
-                                <td class="px-6 py-4 text-gray-700">${item.current_level || '-'}</td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="status-toggle ${isActive ? 'active' : ''}" onclick="toggleStatus('${item.id}', ${isActive}, 'students')"></div>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <button onclick="openEditModal('${item.id}', 'student')" class="action-btn edit-btn">
-                                        Edit
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
+                    return `
+                        <tr class="border-b border-gray-200">
+                            <td class="px-6 py-4 font-semibold text-gray-900">${item.full_name}</td>
+                            <td class="px-6 py-4 font-mono text-gray-700 font-bold">${item.email.split('@')[0].toUpperCase()}</td>
+                            <td class="px-6 py-4 text-gray-700">${item.email}</td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="inline-block px-3 py-1 rounded-full font-bold text-sm ${classColor}">
+                                    Class ${item.uf_class || '--'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-700">${item.region || '-'}</td>
+                            <td class="px-6 py-4 text-center font-bold">${dataStore.students.filter(s => s.current_unit_id === item.id && s.is_active !== false).length}</td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="status-toggle ${isActive ? 'active' : ''}" onclick="toggleStatus('${item.id}', ${isActive}, 'uf')"></div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="openEditModal('${item.id}', 'unit_franchisee')" class="action-btn edit-btn">
+                                    Edit
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } else if (tab === 'students') {
+                html = data.map(item => {
+                    const isActive = item.is_active !== false;
+                    const today = new Date();
+                    let age = '--';
+                    if (item.date_of_birth) {
+                        const dob = new Date(item.date_of_birth);
+                        age = today.getFullYear() - dob.getFullYear();
+                        if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
+                            age--;
+                        }
                     }
-                });
+
+                    return `
+                        <tr class="border-b border-gray-200">
+                            <td class="px-6 py-4 font-semibold text-gray-900">${item.full_name}</td>
+                            <td class="px-6 py-4 text-gray-700">${item.student_code}</td>
+                            <td class="px-6 py-4 text-gray-700">
+                                ${dataStore.uf.find(u => u.id === item.current_unit_id)?.email.split('@')[0].toUpperCase() || '-'}
+                            </td>
+                            <td class="px-6 py-4 text-gray-700 font-bold">Level ${item.current_level || 0}</td>
+                            <td class="px-6 py-4 text-gray-700">${age} years</td>
+                            <td class="px-6 py-4 text-center">
+                                ${item.is_repeated ? '<span class="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold">Repeated</span>' : '<span class="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold">New</span>'}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                ${isActive ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-black uppercase">Active</span>' : '<span class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-black uppercase">Inactive</span>'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } else if (tab === 'dropouts') {
+                html = data.map(item => {
+                    const ufName = dataStore.uf.find(u => u.id === item.current_unit_id)?.full_name || 'Unknown';
+                    const enrollDate = new Date(item.created_at).toLocaleDateString();
+                    
+                    return `
+                        <tr class="border-b border-gray-200">
+                            <td class="px-6 py-4 font-semibold text-gray-900">${item.full_name}</td>
+                            <td class="px-6 py-4 text-gray-700">${item.student_code}</td>
+                            <td class="px-6 py-4 text-gray-700">${ufName}</td>
+                            <td class="px-6 py-4 text-center font-bold">Level ${item.dropout_level || 0}</td>
+                            <td class="px-6 py-4 text-gray-700">
+                                <span class="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+                                    ${item.dropout_reason || 'Not Specified'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-600 text-sm">${enrollDate}</td>
+                        </tr>
+                    `;
+                }).join('');
             }
-            
+
             document.getElementById(`table-${tab}`).innerHTML = html;
-            renderPagination(tab);
-        }
-
-        // Render pagination
-        function renderPagination(tab) {
-            const totalPages = Math.ceil(filteredData[tab].length / itemsPerPage);
-            const page = currentPage[tab];
-            
-            let html = '<button class="pagination-btn" ' + (page === 1 ? 'disabled' : '') + ' onclick="changePage(\'' + tab + '\', ' + (page - 1) + ')">« Previous</button>';
-            
-            html += '<div class="flex gap-2">';
-            
-            // Always show first page
-            html += `<button class="pagination-btn ${page === 1 ? 'active' : ''}" onclick="changePage('${tab}', 1)">1</button>`;
-            
-            // Show page numbers around current page
-            const startPage = Math.max(2, page - 1);
-            const endPage = Math.min(totalPages - 1, page + 1);
-            
-            if (startPage > 2) {
-                html += '<span class="px-3 py-2">...</span>';
-            }
-            
-            for (let i = startPage; i <= endPage; i++) {
-                html += `<button class="pagination-btn ${page === i ? 'active' : ''}" onclick="changePage('${tab}', ${i})">${i}</button>`;
-            }
-            
-            // Show ellipsis if needed
-            if (page < totalPages - 2) {
-                html += '<span class="px-3 py-2">...</span>';
-            }
-            
-            // Always show last page
-            if (totalPages > 1) {
-                html += `<button class="pagination-btn ${page === totalPages ? 'active' : ''}" onclick="changePage('${tab}', ${totalPages})">${totalPages}</button>`;
-            }
-            
-            html += '</div>';
-            
-            // Next button
-            html += `<button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} onclick="changePage('${tab}', ${page + 1})">Next »</button>`;
-            
-            html += '</div>';
-            
-            document.getElementById(`pagination-${tab}`).innerHTML = html;
-        }
-
-        // Change page
-        function changePage(tab, page) {
-            currentPage[tab] = page;
-            renderTable(tab);
-            
-            // Scroll to top of table
-            document.getElementById(`content-${tab}`).scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Sort table
-        function sortTable(tab, column) {
-            filteredData[tab].sort((a, b) => {
-                const aVal = a[column] || '';
-                const bVal = b[column] || '';
-                return aVal.toString().localeCompare(bVal.toString());
-            });
-            renderTable(tab);
         }
 
         // Export to CSV
@@ -676,20 +702,23 @@
             
             let csv = '';
             
-            // Headers
             if (tab === 'uf') {
-                csv = 'Full Name,Email,Password,State,Region,Status\n';
+                csv = 'Full Name,Email,Center Code,Class,City,Status\n';
                 data.forEach(item => {
-                    csv += `"${item.full_name}","${item.email}","${item.password}","${item.state}","${item.region || ''}","${item.is_active !== false ? 'Active' : 'Inactive'}"\n`;
+                    csv += `"${item.full_name}","${item.email}","${item.email.split('@')[0]}","${item.uf_class || '--'}","${item.region}","${item.is_active !== false ? 'Active' : 'Inactive'}"\n`;
                 });
-            } else {
-                csv = 'Full Name,Student ID,Unit Code,Password,State,Level,Status\n';
+            } else if (tab === 'students') {
+                csv = 'Full Name,Student ID,Level,Age,Repeated,Status\n';
                 data.forEach(item => {
-                    csv += `"${item.full_name}","${item.student_code}","${item.unit_code}","${item.password}","${item.state}","${item.current_level}","${item.is_active !== false ? 'Active' : 'Inactive'}"\n`;
+                    csv += `"${item.full_name}","${item.student_code}","${item.current_level}","--","${item.is_repeated ? 'Yes' : 'No'}","${item.is_active !== false ? 'Active' : 'Inactive'}"\n`;
+                });
+            } else if (tab === 'dropouts') {
+                csv = 'Full Name,Student ID,Unit,Dropout Level,Reason,Enrollment Date\n';
+                data.forEach(item => {
+                    csv += `"${item.full_name}","${item.student_code}","--","${item.dropout_level}","${item.dropout_reason || 'Not Specified'}","${new Date(item.created_at).toLocaleDateString()}"\n`;
                 });
             }
             
-            // Download
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -700,18 +729,11 @@
 
         // Switch tab
         function switchTab(tab) {
-            // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
             
-            // Show selected tab
             document.getElementById(`content-${tab}`).classList.add('active');
             document.getElementById(`tab-${tab}`).classList.add('active');
-        }
-
-        // Toggle password visibility
-        function togglePassword(element) {
-            element.classList.toggle('visible');
         }
 
         // Toggle status
@@ -737,39 +759,18 @@
             }
         }
 
-        // Open edit modal
-        function openEditModal(userId, role) {
-            let user = null;
-            if (role === 'unit_franchisee') {
-                user = dataStore.uf.find(u => u.id === userId);
-            } else {
-                user = dataStore.students.find(u => u.id === userId);
-            }
-            
-            if (!user) return;
-            
-            document.getElementById('edit-user-id').value = userId;
-            document.getElementById('edit-user-role').value = role;
-            document.getElementById('edit-name').value = user.full_name || '';
-            document.getElementById('edit-email').value = user.email || '';
-            document.getElementById('edit-password').value = '';
-            
-            document.getElementById('editModal').classList.remove('hidden');
-        }
-
-        // Close modal
-        function closeModal() {
-            document.getElementById('editModal').classList.add('hidden');
-        }
-
         // Open Add UF Modal
         function openAddUFModal() {
             document.getElementById('addUFModal').classList.remove('hidden');
-            // Add real-time email generation as user types
+            
             document.getElementById('uf-center-code').addEventListener('input', function() {
                 const centerCode = this.value.toLowerCase();
                 const email = centerCode ? `${centerCode}@ucmas.in` : 'centercode@ucmas.in';
                 document.getElementById('generated-email').textContent = email;
+            });
+
+            document.getElementById('uf-class').addEventListener('change', function() {
+                document.getElementById('generated-class').textContent = this.value || '--';
             });
         }
 
@@ -779,39 +780,6 @@
             document.getElementById('add-uf-form').reset();
         }
 
-        // Edit form submission
-        document.getElementById('edit-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const userId = document.getElementById('edit-user-id').value;
-            const name = document.getElementById('edit-name').value;
-            const email = document.getElementById('edit-email').value;
-            const password = document.getElementById('edit-password').value;
-            
-            try {
-                const { data: { session } } = await supabase_client.auth.getSession();
-                const { error } = await supabase_client.functions.invoke('manage-student', {
-                    body: { 
-                        action: 'update_user',
-                        user_id: userId,
-                        full_name: name,
-                        email: email,
-                        password: password || undefined
-                    },
-                    headers: { Authorization: `Bearer ${session?.access_token}` }
-                });
-                
-                if (error) throw error;
-                
-                alert('User updated successfully!');
-                closeModal();
-                await loadAllData();
-            } catch (err) {
-                console.error('Error updating user:', err);
-                alert('Failed to update user: ' + err.message);
-            }
-        });
-
         // Add UF form submission
         document.getElementById('add-uf-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -819,43 +787,31 @@
             const name = document.getElementById('uf-name').value;
             const centerCode = document.getElementById('uf-center-code').value.toLowerCase();
             const city = document.getElementById('uf-city').value;
+            const ufClass = document.getElementById('uf-class').value;
             
-            // Auto-generate email and password
-            const email = `${centerCode}@ucmas.in`;
-            const password = 'Welcome@123';
-            
+            if (!ufClass) {
+                alert('Please select a class (A, B, or C)');
+                return;
+            }
+
             try {
-                // Step 1: Call Edge Function to create auth user
                 const { data: { session } } = await supabase_client.auth.getSession();
                 
-                const createUserResponse = await supabase_client.functions.invoke('create-uf-user', {
+                const createUserResponse = await supabase_client.functions.invoke('create-uf-with-class', {
                     body: { 
                         full_name: name,
                         center_code: centerCode.toUpperCase(),
-                        city: city
+                        city: city,
+                        uf_class: ufClass
                     },
                     headers: { Authorization: `Bearer ${session?.access_token}` }
                 });
 
                 if (createUserResponse.error || !createUserResponse.data?.success) {
-                    throw new Error(createUserResponse.error?.message || createUserResponse.data?.error || 'Failed to create auth user');
+                    throw new Error(createUserResponse.error?.message || createUserResponse.data?.error || 'Failed to create UF');
                 }
 
-                // Step 2: Add to unit_franchisees table
-                const { data, error } = await supabase_client
-                    .from('unit_franchisees')
-                    .insert([{
-                        full_name: name,
-                        email: email,
-                        password: password,
-                        state: 'Maharashtra',
-                        region: city,
-                        is_active: true
-                    }]);
-                
-                if (error) throw error;
-                
-                alert(`✅ Unit Franchisee added successfully!\n\nEmail: ${email}\nPassword: ${password}\n\nAuth user created automatically!`);
+                alert(`✅ Unit Franchisee (Class ${ufClass}) added successfully!\n\nEmail: ${createUserResponse.data.email}\nPassword: ${createUserResponse.data.password}`);
                 closeAddUFModal();
                 await loadAllData();
             } catch (err) {
@@ -863,6 +819,19 @@
                 alert('❌ Failed to add UF: ' + err.message);
             }
         });
+
+        // Open Edit Modal
+        function openEditModal(userId, role) {
+            let user = null;
+            if (role === 'unit_franchisee') {
+                user = dataStore.uf.find(u => u.id === userId);
+            }
+            
+            if (!user) return;
+            
+            // Show basic editing capability
+            alert(`Edit functionality for ${user.full_name}\nEmail: ${user.email}\n\nThis can be extended with a full modal form.`);
+        }
 
         // Initialize on load
         init();
@@ -879,10 +848,7 @@
             font-size: 13px;
             letter-spacing: 0.5px;
         ">
-            © 2026 Developed by <span style="
-            color: #fff;
-            font-weight: 700;
-            ">Practice Buddy</span>. All rights reserved.
+            © 2026 Developed by <span style="color: #fff; font-weight: 700;">Practice Buddy</span>. All rights reserved. | Updated with Advanced Features
         </footer>
 </body>
 </html>
