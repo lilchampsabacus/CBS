@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UCMAS 2.0 — Payment Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f8f7fc;
+      --bg2: #ffffff;
+      --bg3: #f0eef6;
+      --card: #ffffff;
+      --border: #e5e1f0;
+      --border2: #d4cfe6;
+      --text: #2d2540;
+      --muted: #7a7194;
+      --accent: #7c3aed;
+      --accent2: #6d28d9;
+      --accent-light: #ede9fe;
+      --accent-soft: rgba(124, 58, 237, 0.08);
+      --green: #16a34a;
+      --green-bg: #f0fdf4;
+      --red: #dc2626;
+      --red-bg: #fef2f2;
+      --orange: #d97706;
+      --orange-bg: #fffbeb;
+      --blue: #2563eb;
+      --blue-bg: #eff6ff;
+      --font: 'DM Sans', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --shadow: 0 1px 3px rgba(45,37,64,0.06), 0 1px 2px rgba(45,37,64,0.04);
+      --shadow-md: 0 4px 12px rgba(45,37,64,0.08);
+      --shadow-lg: 0 10px 30px rgba(45,37,64,0.12);
+      --radius: 12px;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ========== LOGIN ========== */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f8f7fc 0%, #ede9fe 50%, #f8f7fc 100%);
+    }
+
+    .login-box {
+      width: 380px;
+      padding: 44px;
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+
+    .login-box h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .login-box p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .login-box input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: var(--font);
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .login-box button:hover {
+      background: var(--accent2);
+      box-shadow: var(--shadow-md);
+    }
+
+    .login-error {
+      color: var(--red);
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* ========== APP LAYOUT ========== */
+    #app { display: none; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: var(--card);
+      border-bottom: 1.5px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-right span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ========== BUTTONS ========== */
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent2); box-shadow: var(--shadow); }
+    .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+    .btn-ghost { background: var(--bg); border: 1.5px solid var(--border); color: var(--text); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .btn-success { background: var(--green); color: #fff; }
+    .btn-success:hover { filter: brightness(1.08); }
+    .btn-danger { background: var(--red); color: #fff; }
+
+    .container {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ========== STAT CARDS ========== */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      padding: 18px 20px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border-left: 4px solid transparent;
+    }
+
+    .stat-card.purple { border-left-color: var(--accent); }
+    .stat-card.green  { border-left-color: var(--green); }
+    .stat-card.orange { border-left-color: var(--orange); }
+    .stat-card.red    { border-left-color: var(--red); }
+    .stat-card.blue   { border-left-color: var(--blue); }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-family: var(--mono);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ========== TABS ========== */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 20px;
+      background: var(--bg3);
+      border-radius: 10px;
+      padding: 4px;
+    }
+
+    .tab {
+      padding: 9px 20px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .tab:hover { color: var(--text); }
+
+    .tab.active {
+      color: var(--accent);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      font-weight: 600;
+    }
+
+    /* ========== TABLE ========== */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: var(--bg3); }
+
+    th {
+      padding: 11px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    tr:hover td { background: var(--accent-soft); }
+
+    /* ========== BADGES ========== */
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+    }
+
+    .badge-paid    { background: var(--green-bg);  color: var(--green); }
+    .badge-pending { background: var(--blue-bg);   color: var(--blue); }
+    .badge-overdue { background: var(--red-bg);    color: var(--red); }
+    .badge-waived  { background: #f3f4f6;          color: #6b7280; }
+    .badge-active  { background: var(--green-bg);  color: var(--green); }
+    .badge-dropped { background: var(--orange-bg); color: var(--orange); }
+    .badge-cancelled { background: #f3f4f6; color: #9ca3af; text-decoration: line-through; }
+    .badge-free { background: #ecfdf5; color: #059669; font-weight: 700; }
+    .row-free td { background: rgba(236, 253, 245, 0.5); }
+    .badge-may     { background: var(--orange-bg); color: var(--orange); }
+
+    .phone-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .phone-link:hover { text-decoration: underline; }
+
+    /* ========== MODALS ========== */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(45, 37, 64, 0.3);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-bg.open { display: flex; }
+
+    .modal {
+      width: 560px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 28px;
+      border-radius: 18px;
+      background: var(--card);
+      box-shadow: var(--shadow-lg);
+      border: 1.5px solid var(--border);
+    }
+
+    .modal h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--accent);
+    }
+
+    .modal h2 .close {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 22px;
+      background: none;
+      border: none;
+    }
+
+    .modal h2 .close:hover { color: var(--red); }
+
+    /* ========== FORMS ========== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .form-group input,
+    .form-group select {
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    .form-group select { cursor: pointer; }
+
+    .form-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    /* ========== STUDENT INFO ========== */
+    .student-info {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .student-info div {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .student-info div span {
+      display: block;
+      font-size: 15px;
+      color: var(--text);
+      font-weight: 500;
+      margin-top: 3px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    /* ========== WHATSAPP ========== */
+    .wa-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: #f0fdf4;
+      color: #16a34a;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    .wa-btn:hover { background: #dcfce7; }
+
+    /* ========== DROP / DELETE ========== */
+    .btn-drop {
+      background: var(--orange-bg);
+      color: var(--orange);
+      border: 1px solid #fcd34d;
+    }
+
+    .btn-drop:hover { background: #fef3c7; }
+
+    .btn-delete {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid #fca5a5;
+    }
+
+    .btn-delete:hover { background: #fee2e2; }
+
+    .dropped-row td { opacity: 0.5; }
+
+    .confirm-box {
+      padding: 16px;
+      background: var(--red-bg);
+      border: 1.5px solid #fca5a5;
+      border-radius: 10px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--red);
+    }
+
+    .confirm-box strong { display: block; margin-bottom: 8px; }
+
+    /* ========== TOAST ========== */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 200;
+      animation: slideUp 0.3s;
+      display: none;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .toast.success { background: var(--green); color: #fff; display: block; }
+    .toast.error   { background: var(--red);   color: #fff; display: block; }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .modal { width: 95%; margin: 20px; }
+      .container { padding: 16px; }
+      .topbar { flex-wrap: wrap; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== LOGIN SCREEN ========== -->
+  <div id="login-screen">
+    <div class="login-box">
+      <h1>UCMAS 2.0</h1>
+      <p>Payment Tracker — Admin Login</p>
+      <input type="text" id="login-user" placeholder="Username" autocomplete="off">
+      <input type="password" id="login-pass" placeholder="Password" autocomplete="off">
+      <button onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error">Invalid credentials</div>
+    </div>
+  </div>
+
+  <!-- ========== MAIN APP ========== -->
+  <div id="app">
+    <div class="topbar">
+      <h1>UCMAS 2.0 Payment Tracker</h1>
+      <div class="topbar-right">
+        <span id="center-label"></span>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="stats" id="stats-row"></div>
+
+      <div class="tabs" style="flex-wrap:wrap">
+        <div class="tab active" data-tab="students" onclick="switchTab('students')">Students</div>
+        <div class="tab" data-tab="overdue" onclick="switchTab('overdue')">Overdue</div>
+        <div class="tab" data-tab="upcoming" onclick="switchTab('upcoming')">Upcoming</div>
+        <div class="tab" data-tab="collections" onclick="switchTab('collections')">💰 Collections</div>
+        <div class="tab" data-tab="expenses" onclick="switchTab('expenses')">📤 Expenses</div>
+        <div class="tab" data-tab="pnl" onclick="switchTab('pnl')">📊 P&L</div>
+      </div>
+
+      <div id="tab-content"></div>
+    </div>
+  </div>
+
+  <!-- ========== ADD STUDENT MODAL ========== -->
+  <div class="modal-bg" id="add-modal">
+    <div class="modal">
+      <h2>New Admission <button class="close" onclick="closeModal('add-modal')">&times;</button></h2>
+      <div class="form-grid">
+        <div class="form-group"><label>Student Name</label><input id="f-sname" required></div>
+        <div class="form-group"><label>Parent Name</label><input id="f-pname" required></div>
+        <div class="form-group"><label>Parent Phone</label><input id="f-phone" type="tel" required></div>
+        <div class="form-group"><label>Parent Email</label><input id="f-email" type="email"></div>
+        <div class="form-group"><label>Admission Date</label><input id="f-date" type="date" required></div>
+        <div class="form-group"><label>EMI Start Date (Preferred)</label><input id="f-paydate" type="date" title="Date from which EMI cycle starts. Leave same as admission if no preference."></div>
+        <div class="form-group">
+          <label>Track</label>
+          <select id="f-track">
+            <option value="foundation">Foundation (Below 6 yrs — 42 months)</option>
+            <option value="basic">Direct Basic (6+ yrs — 38 months)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Payment Plan</label>
+          <select id="f-plan">
+            <option value="quarterly">Quarterly</option>
+            <option value="halfyearly">Half-Yearly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Notes</label><input id="f-notes" placeholder="Optional"></div>
+      </div>
+      <div id="emi-preview" style="margin-top:16px; padding:14px; background:var(--bg); border-radius:10px; font-size:12px; color:var(--muted); display:none; border:1px solid var(--border)"></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal('add-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addStudent()">Enroll & Generate EMI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PAYMENT MODAL ========== -->
+  <div class="modal-bg" id="pay-modal">
+    <div class="modal">
+      <h2>Record Payment <button class="close" onclick="closeModal('pay-modal')">&times;</button></h2>
+      <div class="form-grid">
+        <div class="form-group full"><label>Payment</label><div id="pay-info" style="font-size:14px; margin-top:4px"></div></div>
+        <div class="form-group"><label>Paid Date</label><input id="pay-date" type="date"></div>
+        <div class="form-group"><label>Amount Received</label><input id="pay-amount" type="number"></div>
+        <div class="form-group">
+          <label>Payment Mode</label>
+          <select id="pay-mode">
+            <option value="cash">Cash</option>
+            <option value="upi">UPI</option>
+            <option value="bank">Bank Transfer</option>
+            <option value="cheque">Cheque</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Receipt #</label><input id="pay-receipt"></div>
+        <div class="form-group full"><label>Notes</label><input id="pay-notes"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal('pay-modal')">Cancel</button>
+        <button class="btn btn-success" onclick="markPaid()">Mark as Paid</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ADD EXPENSE MODAL ========== -->
+  <div class="modal-bg" id="expense-modal">
+    <div class="modal">
+      <h2>Add Expense <button class="close" onclick="closeModal('expense-modal')">&times;</button></h2>
+      <div class="form-grid">
+        <div class="form-group"><label>Date</label><input id="exp-date" type="date" required></div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="exp-cat">
+            <option value="Rent">Rent</option>
+            <option value="CI Salary">CI Salary</option>
+            <option value="MF Share">MF Share</option>
+            <option value="Electricity">Electricity</option>
+            <option value="Internet">Internet</option>
+            <option value="Stationery">Stationery</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Transport">Transport</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Kit Purchase">Kit Purchase</option>
+            <option value="Competition Fee">Competition Fee</option>
+            <option value="Event">Event</option>
+            <option value="Miscellaneous">Miscellaneous</option>
+          </select>
+        </div>
+        <div class="form-group full"><label>Description</label><input id="exp-desc" placeholder="What was this expense for?" required></div>
+        <div class="form-group"><label>Amount (₹)</label><input id="exp-amt" type="number" required></div>
+        <div class="form-group">
+          <label>Payment Mode</label>
+          <select id="exp-mode">
+            <option>Cash</option><option>UPI</option><option>Bank Transfer</option><option>Cheque</option>
+          </select>
+        </div>
+        <div class="form-group full"><label>Notes</label><input id="exp-notes" placeholder="Optional"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal('expense-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addExpense()">Save Expense</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== LICENSE BLOCK OVERLAY ========== -->
+  <div id="license-block" style="display:none; position:fixed; inset:0; background:#fff;
+    z-index:999; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:40px">
+    <div style="max-width:400px">
+      <h1 style="font-size:24px; color:var(--red); margin-bottom:12px">License Required</h1>
+      <p id="license-error" style="font-size:14px; color:var(--muted); margin-bottom:20px">Verifying license...</p>
+      <p style="font-size:13px; color:var(--muted)">
+        This software requires a valid license.<br>
+        Contact: <a href="https://wa.me/919730482620" style="color:var(--accent)">+91 97304 82620</a>
+      </p>
+      <a href="https://wa.me/919730482620?text=Hi%2C%20my%20payment%20tracker%20license%20has%20expired.%20Please%20help%20me%20renew."
+        style="display:inline-block; margin-top:16px; padding:10px 24px; background:var(--accent);
+        color:#fff; border-radius:8px; text-decoration:none; font-weight:600; font-size:14px">
+        Renew License
+      </a>
+    </div>
+  </div>
+
+  <!-- ========== TOAST ========== -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ========== DROP STUDENT MODAL ========== -->
+  <div class="modal-bg" id="drop-modal">
+    <div class="modal">
+      <h2 style="color:var(--orange)">Drop Student <button class="close" onclick="closeModal('drop-modal')">&times;</button></h2>
+      <div id="drop-info" style="padding:12px; background:var(--orange-bg); border-radius:8px; margin-bottom:16px; font-size:14px"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Drop Date</label>
+          <input id="drop-date" type="date">
+        </div>
+        <div class="form-group">
+          <label>Reason</label>
+          <select id="drop-reason">
+            <option value="parent_request">Parent requested</option>
+            <option value="relocation">Family relocated</option>
+            <option value="financial">Financial reasons</option>
+            <option value="not_interested">Child not interested</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Notes</label>
+          <input id="drop-notes" placeholder="Optional details">
+        </div>
+      </div>
+      <div class="confirm-box">
+        <strong>This will:</strong>
+        • Mark student status as "dropped"<br>
+        • Cancel all pending & overdue payments<br>
+        • Stop WhatsApp reminders for this parent<br>
+        • Already paid payments will remain recorded
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal('drop-modal')">Cancel</button>
+        <button class="btn btn-drop" onclick="confirmDrop()" style="font-weight:700">Drop Student</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== DELETE CONFIRM MODAL ========== -->
+  <div class="modal-bg" id="delete-modal">
+    <div class="modal">
+      <h2 style="color:var(--red)">Delete Student <button class="close" onclick="closeModal('delete-modal')">&times;</button></h2>
+      <div id="delete-info" style="padding:12px; background:var(--red-bg); border-radius:8px; margin-bottom:16px; font-size:14px"></div>
+      <div class="confirm-box">
+        <strong>⚠ WARNING — This cannot be undone!</strong>
+        • Student record will be permanently deleted<br>
+        • ALL payment records will be deleted<br>
+        • This action is irreversible
+      </div>
+      <div class="form-group full" style="margin-top:12px">
+        <label>Type student name to confirm</label>
+        <input id="delete-confirm-name" placeholder="Type exact student name here">
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal('delete-modal')">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDelete()" style="font-weight:700">Permanently Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== JAVASCRIPT ========== -->
+  <script>
+    // ==========================================
+    // SUPABASE CONFIG (franchisee's own project)
+    // ==========================================
+    const SUPABASE_URL = 'https://vyxwxbofnjyzjckndzju.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHd4Ym9mbmp5empja25kemp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwODQzOTAsImV4cCI6MjA4OTY2MDM5MH0.1hHHbimFt0RO8aBes4aBTGQXCYnRVdKFwa5FYzsfVPc';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ==========================================
+    // LICENSE CONFIG (points to Nikhil's master server)
+    // ==========================================
+    const LICENSE_KEY = 'LC-MASTER-2026-NIKHIL';
+    const LICENSE_SERVER = 'https://vyxwxbofnjyzjckndzju.supabase.co/functions/v1/verify-license';
+
+    // ==========================================
+    // LICENSE VERIFICATION
+    // ==========================================
+
+    async function verifyLicense() {
+      const overlay = document.getElementById('license-block');
+      try {
+        const resp = await fetch(LICENSE_SERVER, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ license_key: LICENSE_KEY })
+        });
+        const data = await resp.json();
+
+        if (data.valid) {
+          // License OK — hide overlay, show app
+          overlay.style.display = 'none';
+          // Show warning if expiring soon
+          if (data.warning) {
+            setTimeout(() => toast(data.warning, 'error'), 2000);
+          }
+          return true;
+        } else {
+          // License invalid — show block screen
+          overlay.style.display = 'flex';
+          document.getElementById('license-error').textContent = data.error || 'License verification failed.';
+          return false;
+        }
+      } catch (e) {
+        // Network error — allow offline grace (check again next load)
+        console.warn('License check failed (offline?), allowing grace period');
+        overlay.style.display = 'none';
+        return true;
+      }
+    }
+
+    // ==========================================
+    // GLOBAL STATE
+    // ==========================================
+    let CONFIG = {};
+    let currentPaymentId = null;
+
+    // Level definitions
+    const LEVELS_FOUND = ['Foundation', 'Basic', 'Elem A', 'Elem B', 'Int A', 'Int B', 'Higher A', 'Higher B', 'Advance'];
+    const DUR_FOUND    = [4, 6, 6, 6, 4, 4, 4, 4, 4]; // Total: 42 months
+
+    const LEVELS_BASIC = ['Basic', 'Elem A', 'Elem B', 'Int A', 'Int B', 'Higher A', 'Higher B', 'Advance'];
+    const DUR_BASIC    = [6, 6, 6, 4, 4, 4, 4, 4]; // Total: 38 months
+
+    // ==========================================
+    // UTILITY FUNCTIONS
+    // ==========================================
+
+    function getLevelAtMonth(month, levels, durations) {
+      let cumulative = 0;
+      for (let i = 0; i < durations.length; i++) {
+        cumulative += durations[i];
+        if (month <= cumulative) return levels[i];
+      }
+      return levels[levels.length - 1];
+    }
+
+    function addMonths(date, n) {
+      const d = new Date(date);
+      d.setMonth(d.getMonth() + n);
+      return d;
+    }
+
+    function fmtDate(d) {
+      return new Date(d).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    }
+
+    function fmtMoney(n) {
+      return '₹' + Number(n).toLocaleString('en-IN');
+    }
+
+    function toast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + type;
+      setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    // ==========================================
+    // AUTH — LOGIN / LOGOUT
+    // ==========================================
+
+    async function doLogin() {
+      const user = document.getElementById('login-user').value.trim();
+      const pass = document.getElementById('login-pass').value.trim();
+
+      const { data } = await sb
+        .from('admin_users')
+        .select('*')
+        .eq('username', user)
+        .eq('password_hash', pass)
+        .single();
+
+      if (data) {
+        sessionStorage.setItem('admin', JSON.stringify(data));
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        await loadConfig();
+        await loadDashboard();
+      } else {
+        const err = document.getElementById('login-error');
+        err.style.display = 'block';
+        setTimeout(() => err.style.display = 'none', 3000);
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem('admin');
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+    }
+
+    // Auto-login if session exists
+    // Auto-login and license check
+    (async function () {
+      // Verify license first
+      const licensed = await verifyLicense();
+      if (!licensed) return; // Block everything if license invalid
+
+      const saved = sessionStorage.getItem('admin');
+      if (saved) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        loadConfig().then(loadDashboard);
+      }
+      // Enter key on password field
+      document.getElementById('login-pass').addEventListener('keydown', e => {
+        if (e.key === 'Enter') doLogin();
+      });
+      // Default admission date = today
+      document.getElementById('f-date').valueAsDate = new Date();
+      document.getElementById('f-paydate').valueAsDate = new Date();
+      // Sync paydate when admission date changes
+      document.getElementById('f-date').addEventListener('change', function() {
+        const pd = document.getElementById('f-paydate');
+        if (!pd.value || pd.value < this.value) pd.value = this.value;
+        previewEMI();
+      });
+      // EMI preview on form change
+      ['f-track', 'f-plan', 'f-paydate'].forEach(id => {
+        document.getElementById(id).addEventListener('change', previewEMI);
+      });
+    })();
+
+    // ==========================================
+    // CONFIG
+    // ==========================================
+
+    async function loadConfig() {
+      const { data } = await sb.from('center_config').select('*').limit(1).single();
+      if (data) CONFIG = data;
+
+      document.getElementById('center-label').textContent =
+        `${CONFIG.center_name} — Class ${CONFIG.class_type} (${CONFIG.region})`;
+
+      // Update plan fee labels in the form
+      const sel = document.getElementById('f-plan');
+      sel.options[0].text = `Quarterly — ${fmtMoney(CONFIG.quarterly_fee)}`;
+      sel.options[1].text = `Half-Yearly — ${fmtMoney(CONFIG.halfyearly_fee)}`;
+      sel.options[2].text = `Yearly — ${fmtMoney(CONFIG.yearly_fee)}`;
+    }
+
+    // ==========================================
+    // DASHBOARD — LOAD & RENDER STATS
+    // ==========================================
+
+    async function loadDashboard() {
+      const { data: students } = await sb
+        .from('students')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const { data: payments } = await sb.from('payments').select('*');
+
+      const today = new Date().toISOString().split('T')[0];
+      const all = payments || [];
+      const activeStudents = (students || []).filter(s => s.status === 'active');
+
+      // Auto-mark overdue payments
+      const overdue = all.filter(p => p.status === 'pending' && p.due_date < today);
+      for (const p of overdue) {
+        await sb.from('payments').update({ status: 'overdue' }).eq('id', p.id);
+        p.status = 'overdue';
+      }
+
+      const overdueNow = all.filter(p => p.status === 'overdue');
+      const pending = all.filter(p => p.status === 'pending');
+      const paid = all.filter(p => p.status === 'paid');
+      const totalCollected = paid.reduce((sum, p) => sum + (p.paid_amount || p.amount), 0);
+
+      // Render stat cards
+      document.getElementById('stats-row').innerHTML = `
+        <div class="stat-card purple">
+          <div class="stat-label">Active Students</div>
+          <div class="stat-value">${activeStudents.length}</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Collected</div>
+          <div class="stat-value">${fmtMoney(totalCollected)}</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value">${pending.length}</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Overdue</div>
+          <div class="stat-value">${overdueNow.length}</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Total Students</div>
+          <div class="stat-value">${(students || []).length}</div>
+        </div>
+      `;
+
+      // Store for tab rendering
+      window._students = students || [];
+      window._payments = all;
+      switchTab('students');
+    }
+
+    // ==========================================
+    // TAB SWITCHING
+    // ==========================================
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t =>
+        t.classList.toggle('active', t.dataset.tab === tab)
+      );
+      const tc = document.getElementById('tab-content');
+      if (tab === 'students') renderStudentsList(tc);
+      else if (tab === 'overdue') renderOverdue(tc);
+      else if (tab === 'upcoming') renderUpcoming(tc);
+      else if (tab === 'collections') renderCollections(tc);
+      else if (tab === 'expenses') renderExpenses(tc);
+      else if (tab === 'pnl') renderPnL(tc);
+      else if (tab === 'settings') renderSettings(tc);
+    }
+
+    // ==========================================
+    // STUDENTS TAB
+    // ==========================================
+
+    function renderStudentsList(container) {
+      const students = window._students || [];
+
+      container.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:12px; flex-wrap:wrap">
+          <input type="text" id="search-box" placeholder="Search student or parent..."
+            style="padding:9px 14px; background:var(--card); border:1.5px solid var(--border);
+            border-radius:8px; color:var(--text); font-family:var(--font); font-size:13px;
+            width:280px; outline:none; box-shadow:var(--shadow)"
+            oninput="filterStudents(this.value)">
+          <button class="btn btn-primary" onclick="openModal('add-modal')">+ New Admission</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th><th>Parent</th><th>Phone</th><th>Track</th>
+                <th>Plan</th><th>Admission</th><th>Status</th><th>Payments</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="students-tbody">
+              ${students.map(s => {
+                const sp = (window._payments || []).filter(p => p.student_id === s.id);
+                const paidCount = sp.filter(p => p.status === 'paid').length;
+                const overdueCount = sp.filter(p => p.status === 'overdue').length;
+                const paidableCount = sp.filter(p => p.status !== 'free' && p.status !== 'cancelled').length;
+                const freeCount = sp.filter(p => p.status === 'free').length;
+                const planLabel = s.payment_plan === 'quarterly' ? 'Q'
+                  : s.payment_plan === 'halfyearly' ? 'HY' : 'YR';
+
+                return `
+                  <tr data-search="${(s.student_name + ' ' + s.parent_name + ' ' + s.parent_phone).toLowerCase()}"
+                    class="${s.status === 'dropped' ? 'dropped-row' : ''}">
+                    <td style="font-weight:600">${s.student_name}</td>
+                    <td>${s.parent_name}</td>
+                    <td><a class="phone-link" href="tel:${s.parent_phone}">${s.parent_phone}</a></td>
+                    <td>${s.track === 'foundation' ? 'Foundation' : 'Basic'}</td>
+                    <td>${planLabel}</td>
+                    <td>${fmtDate(s.admission_date)}</td>
+                    <td>
+                      <span class="badge badge-${s.status}">${s.status}</span>
+                      ${overdueCount > 0 ? `<span class="badge badge-overdue">${overdueCount} overdue</span>` : ''}
+                    </td>
+                    <td style="font-family:var(--mono); font-size:12px">${paidCount}/${paidableCount}${freeCount > 0 ? ` <span style="color:var(--green)">+${freeCount}🎁</span>` : ''}</td>
+                    <td>
+                      <button class="btn btn-ghost btn-sm" onclick="viewStudent('${s.id}')">View EMI</button>
+                      <button class="btn btn-ghost btn-sm" onclick="quickShare('${s.id}')" title="Copy parent link">📤</button>
+                      ${s.status === 'active'
+                        ? `<button class="btn btn-drop btn-sm" onclick="openDropModal('${s.id}','${s.student_name}')">Drop</button>`
+                        : ''}
+                      <button class="btn btn-delete btn-sm" onclick="openDeleteModal('${s.id}','${s.student_name}')">✕</button>
+                    </td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function filterStudents(query) {
+      const rows = document.querySelectorAll('#students-tbody tr');
+      rows.forEach(row => {
+        row.style.display = row.dataset.search.includes(query.toLowerCase()) ? '' : 'none';
+      });
+    }
+
+    // ==========================================
+    // OVERDUE TAB
+    // ==========================================
+
+    function renderOverdue(container) {
+      const overdue = (window._payments || []).filter(p => p.status === 'overdue');
+      const students = window._students || [];
+
+      container.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Student</th><th>Parent Phone</th><th>Due Date</th><th>Amount</th><th>Level</th><th>Days Late</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              ${overdue.map(p => {
+                const s = students.find(st => st.id === p.student_id) || {};
+                const daysLate = Math.floor((Date.now() - new Date(p.due_date)) / 86400000);
+                const waBtn = s.whatsapp_enabled !== false
+                  ? `<button class="wa-btn" onclick="sendWhatsApp('${s.parent_phone}','${s.student_name}','${fmtDate(p.due_date)}','${p.amount}')">WA</button>`
+                  : '<span style="font-size:11px;color:var(--muted)">WA off</span>';
+
+                return `
+                  <tr>
+                    <td style="font-weight:600">${s.student_name || '—'}</td>
+                    <td>
+                      <a class="phone-link" href="tel:${s.parent_phone}">${s.parent_phone || ''}</a>
+                      ${waBtn}
+                    </td>
+                    <td style="color:var(--red); font-weight:600">${fmtDate(p.due_date)}</td>
+                    <td style="font-family:var(--mono)">${fmtMoney(p.amount)}${p.is_kit_included ? ' +kit' : ''}</td>
+                    <td>${p.level_at_payment}${p.is_may_holiday ? ' 🔴' : ''}</td>
+                    <td style="font-family:var(--mono); color:var(--red); font-weight:600">${daysLate}d</td>
+                    <td>
+                      <button class="btn btn-success btn-sm"
+                        onclick="openPayModal('${p.id}', ${p.amount}, '${s.student_name}', '${p.due_date}', ${p.payment_number}, ${p.kit_amount || 0})">
+                        Pay
+                      </button>
+                    </td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // UPCOMING TAB
+    // ==========================================
+
+    function renderUpcoming(container) {
+      const today = new Date();
+      const weekLater = new Date(today.getTime() + 7 * 86400000);
+      const todayStr = today.toISOString().split('T')[0];
+      const weekStr = weekLater.toISOString().split('T')[0];
+
+      const upcoming = (window._payments || []).filter(
+        p => p.status === 'pending' && p.due_date >= todayStr && p.due_date <= weekStr
+      );
+      const students = window._students || [];
+
+      container.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Student</th><th>Parent Phone</th><th>Due Date</th><th>Amount</th><th>Level</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              ${upcoming.map(p => {
+                const s = students.find(st => st.id === p.student_id) || {};
+                const waBtn = s.whatsapp_enabled !== false
+                  ? `<button class="wa-btn" onclick="sendWhatsApp('${s.parent_phone}','${s.student_name}','${fmtDate(p.due_date)}','${p.amount}')">WA</button>`
+                  : '<span style="font-size:11px;color:var(--muted)">WA off</span>';
+
+                return `
+                  <tr>
+                    <td style="font-weight:600">${s.student_name || '—'}</td>
+                    <td>
+                      <a class="phone-link" href="tel:${s.parent_phone}">${s.parent_phone || ''}</a>
+                      ${waBtn}
+                    </td>
+                    <td>${fmtDate(p.due_date)}</td>
+                    <td style="font-family:var(--mono)">${fmtMoney(p.amount)}${p.is_kit_included ? ' +kit' : ''}</td>
+                    <td>${p.level_at_payment}${p.is_may_holiday ? ' 🔴' : ''}</td>
+                    <td>
+                      <button class="btn btn-success btn-sm"
+                        onclick="openPayModal('${p.id}', ${p.amount}, '${s.student_name}', '${p.due_date}', ${p.payment_number}, ${p.kit_amount || 0})">
+                        Pay
+                      </button>
+                    </td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // VIEW STUDENT EMI DETAIL
+    // ==========================================
+
+    async function viewStudent(studentId) {
+      const { data: student } = await sb
+        .from('students').select('*').eq('id', studentId).single();
+
+      const { data: payments } = await sb
+        .from('payments').select('*').eq('student_id', studentId).order('payment_number');
+
+      const planLabel = student.payment_plan === 'quarterly' ? 'Quarterly'
+        : student.payment_plan === 'halfyearly' ? 'Half-Yearly' : 'Yearly';
+
+      const paidCount = payments.filter(p => p.status === 'paid').length;
+      const freeCount = payments.filter(p => p.status === 'free').length;
+      const paidableCount = payments.filter(p => p.status !== 'free' && p.status !== 'cancelled').length;
+      const totalPaid = payments.filter(p => p.status === 'paid')
+        .reduce((sum, p) => sum + (p.paid_amount || p.amount), 0);
+      const totalDue = payments.filter(p => p.status !== 'free' && p.status !== 'cancelled')
+        .reduce((sum, p) => sum + p.amount + (p.kit_amount || 0), 0);
+
+      const tc = document.getElementById('tab-content');
+      tc.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="switchTab('students')">← Back</button>
+          <div style="display:flex; gap:6px">
+            <button class="btn btn-primary btn-sm" onclick="shareStudentLink('${student.id}','${student.student_name}','${student.parent_phone}')">📤 Share with Parent</button>
+            ${student.status === 'active'
+              ? `<button class="btn btn-drop btn-sm" onclick="openDropModal('${student.id}','${student.student_name}')">Drop Student</button>`
+              : ''}
+            <button class="btn btn-delete btn-sm" onclick="openDeleteModal('${student.id}','${student.student_name}')">Delete</button>
+          </div>
+        </div>
+
+        ${student.status === 'dropped' ? `
+          <div style="padding:12px 16px; background:var(--orange-bg); border:1.5px solid #fcd34d;
+            border-radius:10px; margin-bottom:12px; font-size:13px; color:var(--orange)">
+            <strong>⚠ DROPPED</strong> — ${student.dropped_date ? fmtDate(student.dropped_date) : 'Date not recorded'}
+            ${student.drop_reason ? ` | Reason: ${student.drop_reason}` : ''}
+            | WhatsApp: ${student.whatsapp_enabled ? 'ON' : 'OFF'}
+          </div>` : ''}
+
+        <div style="padding:20px; background:var(--card); border-radius:var(--radius);
+          box-shadow:var(--shadow); margin-bottom:16px; border:1.5px solid var(--border)">
+          <div class="student-info">
+            <div>Student<span>${student.student_name}</span></div>
+            <div>Parent<span>${student.parent_name}</span></div>
+            <div>Phone<span><a class="phone-link" href="tel:${student.parent_phone}">${student.parent_phone}</a></span></div>
+            <div>Track<span>${student.track === 'foundation' ? 'Foundation (42 learning mo)' : 'Basic (38 learning mo)'}</span></div>
+            <div>Plan<span>${planLabel}</span></div>
+            <div>Admission<span>${fmtDate(student.admission_date)}</span></div>
+            <div>EMI Starts<span style="color:var(--accent)">${student.preferred_payment_date ? fmtDate(student.preferred_payment_date) : fmtDate(student.admission_date)}</span></div>
+            <div>Course Ends<span style="font-family:var(--mono); color:var(--accent)">${student.course_end_date ? fmtDate(student.course_end_date) : '—'}</span></div>
+            <div>Duration<span style="font-family:var(--mono)">${student.calendar_months || student.total_months}mo (${student.may_holidays || 0} May holidays)</span></div>
+            <div>Progress<span style="font-family:var(--mono)">${paidCount}/${paidableCount} paid${freeCount > 0 ? ` + ${freeCount} free` : ''}</span></div>
+            <div>Collected<span style="font-family:var(--mono); color:var(--green)">${fmtMoney(totalPaid)} / ${fmtMoney(totalDue)}</span></div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Due Date</th><th>Amount</th><th>Level</th><th>Status</th><th>Paid Date</th><th>Mode</th><th>Receipt</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              ${payments.map(p => {
+                const isFree = p.status === 'free';
+                const rowStyle = isFree ? 'background: #ecfdf5'
+                  : p.is_may_holiday ? 'background: var(--orange-bg)' : '';
+                const amountDisplay = isFree
+                  ? '<span style="color:var(--green); font-weight:700">₹0 FREE</span>'
+                  : fmtMoney(p.amount);
+
+                return `
+                <tr style="${rowStyle}">
+                  <td style="font-family:var(--mono); font-weight:600">${p.payment_number}</td>
+                  <td>
+                    ${fmtDate(p.due_date)}
+                    ${p.is_may_holiday && isFree ? '<span class="badge badge-may">May holiday</span>' : ''}
+                    ${p.is_may_holiday && !isFree ? '<span class="badge badge-may">May</span>' : ''}
+                    ${p.is_prorated ? '<span class="badge" style="background:var(--accent-light); color:var(--accent)">prorated</span>' : ''}
+                  </td>
+                  <td style="font-family:var(--mono)">
+                    ${amountDisplay}
+                    ${p.is_kit_included ? `<br><span style="font-size:11px; color:var(--muted)">+kit ${fmtMoney(p.kit_amount)}</span>` : ''}
+                  </td>
+                  <td>${isFree && p.is_may_holiday ? '🔴 Holiday' : p.level_at_payment}</td>
+                  <td><span class="badge badge-${p.status}">${isFree ? '🎁 FREE' : p.status}</span></td>
+                  <td>${p.paid_date ? fmtDate(p.paid_date) : isFree ? 'No charge' : '—'}</td>
+                  <td>${p.payment_mode || (isFree ? '—' : '—')}</td>
+                  <td style="font-family:var(--mono); font-size:11px">${p.receipt_number || '—'}</td>
+                  <td>
+                    ${p.status === 'paid' ? '✓'
+                      : isFree ? '🎁'
+                      : `<button class="btn btn-success btn-sm"
+                          onclick="openPayModal('${p.id}', ${p.amount}, '${student.student_name}', '${p.due_date}', ${p.payment_number}, ${p.kit_amount || 0})">
+                          Pay
+                        </button>`}
+                  </td>
+                </tr>
+              `}).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // EMI GENERATION ENGINE (May-aware, includes FREE months)
+    // ==========================================
+
+    function generateEMI(admissionDate, track, plan) {
+      const levels = track === 'foundation' ? LEVELS_FOUND : LEVELS_BASIC;
+      const durations = track === 'foundation' ? DUR_FOUND : DUR_BASIC;
+      const learningNeeded = track === 'foundation' ? 42 : 38;
+
+      const period = plan === 'quarterly' ? 3 : plan === 'halfyearly' ? 6 : 12;
+      const fee = plan === 'quarterly' ? CONFIG.quarterly_fee
+        : plan === 'halfyearly' ? CONFIG.halfyearly_fee
+        : CONFIG.yearly_fee;
+
+      const admDate = new Date(admissionDate);
+      const startMonth = admDate.getMonth();
+      const startYear = admDate.getFullYear();
+      const startDay = admDate.getDate();
+
+      // Step 1: Build full calendar — walk month by month, skip May for learning
+      const calendar = [];
+      let m = startMonth, y = startYear, learningDone = 0;
+
+      while (learningDone < learningNeeded) {
+        const isMay = (m === 4);
+        if (isMay) {
+          calendar.push({ m, y, isMay: true, lm: learningDone });
+        } else {
+          learningDone++;
+          calendar.push({ m, y, isMay: false, lm: learningDone });
+        }
+        m++;
+        if (m === 12) { m = 0; y++; }
+      }
+
+      const calendarMonths = calendar.length;
+      const mays = calendar.filter(c => c.isMay).length;
+      const lastCal = calendar[calendar.length - 1];
+      const courseEndDate = `${lastCal.y}-${String(lastCal.m + 1).padStart(2, '0')}-28`;
+
+      // Step 2: Generate PAID installments (based on learning months)
+      const fullPayments = Math.floor(learningNeeded / period);
+      const remainder = learningNeeded % period;
+      const numPayments = fullPayments + (remainder > 0 ? 1 : 0);
+      const lastPayAmt = remainder > 0 ? Math.round(fee * remainder / period) : fee;
+
+      const emis = [];
+
+      for (let i = 0; i < numPayments; i++) {
+        // Payment due date: every `period` CALENDAR months from admission
+        const payM = (startMonth + i * period) % 12;
+        const payY = startYear + Math.floor((startMonth + i * period) / 12);
+        const payDay = Math.min(startDay, 28); // Safe day to avoid month overflow
+        const dueDateStr = `${payY}-${String(payM + 1).padStart(2, '0')}-${String(payDay).padStart(2, '0')}`;
+
+        const isMayPayment = (payM === 4);
+        const isLast = (i === numPayments - 1) && (remainder > 0);
+        const amount = isLast ? lastPayAmt : fee;
+
+        // Find learning month at this payment's calendar position
+        const calOffset = i * period;
+        let lmAtPayment = 0;
+        for (let c = 0; c < Math.min(calOffset, calendar.length); c++) {
+          if (!calendar[c].isMay) lmAtPayment++;
+        }
+        const level = getLevelAtMonth(lmAtPayment + 1, levels, durations);
+
+        emis.push({
+          payment_number: i + 1,
+          due_date: dueDateStr,
+          amount: amount,
+          is_kit_included: i === 0,
+          kit_amount: i === 0 ? CONFIG.kit_fee : 0,
+          level_at_payment: level,
+          is_may_holiday: isMayPayment,
+          is_prorated: isLast && remainder > 0,
+          status: 'pending'
+        });
+      }
+
+      // Step 3: Find last payment's calendar month offset
+      const lastPayCalOffset = (numPayments - 1) * period;
+
+      // Step 4: Generate FREE months — from month after last payment until course end
+      const freeEmis = [];
+      let freeNum = numPayments + 1;
+
+      for (let c = lastPayCalOffset + 1; c < calendarMonths; c++) {
+        const cal = calendar[c];
+        const freeDate = `${cal.y}-${String(cal.m + 1).padStart(2, '0')}-01`;
+        const level = cal.isMay ? 'Holiday'
+          : getLevelAtMonth(cal.lm, levels, durations);
+
+        freeEmis.push({
+          payment_number: freeNum++,
+          due_date: freeDate,
+          amount: 0,
+          is_kit_included: false,
+          kit_amount: 0,
+          level_at_payment: level,
+          is_may_holiday: cal.isMay,
+          is_prorated: false,
+          status: 'free'
+        });
+      }
+
+      return {
+        emis,
+        freeEmis,
+        allEmis: [...emis, ...freeEmis],
+        learningMonths: learningNeeded,
+        calendarMonths: calendarMonths,
+        mayHolidays: mays,
+        freeMonthCount: freeEmis.length,
+        courseEndDate: courseEndDate
+      };
+    }
+
+    // ==========================================
+    // EMI PREVIEW (in admission form)
+    // ==========================================
+
+    function previewEMI() {
+      const date = document.getElementById('f-paydate').value || document.getElementById('f-date').value;
+      const track = document.getElementById('f-track').value;
+      const plan = document.getElementById('f-plan').value;
+      if (!date) return;
+
+      const result = generateEMI(date, track, plan);
+      const total = result.emis.reduce((sum, e) => sum + e.amount + e.kit_amount, 0);
+
+      const div = document.getElementById('emi-preview');
+      div.style.display = 'block';
+      div.innerHTML = `
+        <strong style="color:var(--text)">${result.emis.length} paid payments + ${result.freeMonthCount} FREE months</strong><br>
+        ${result.learningMonths} learning months + ${result.mayHolidays} May holidays
+        = ${result.calendarMonths} calendar months<br>
+        Total: <strong style="color:var(--green)">${fmtMoney(total)}</strong>
+        (incl. kit ${fmtMoney(CONFIG.kit_fee)})<br>
+        First payment: ${fmtDate(result.emis[0].due_date)}
+        → Last payment: ${fmtDate(result.emis[result.emis.length - 1].due_date)}<br>
+        <strong>Course ends: ${fmtDate(result.courseEndDate)}</strong>
+        <br><span style="color:var(--green)">🎁 <strong>${result.freeMonthCount} months FREE</strong> at the end — no fee collected!</span>
+      `;
+    }
+
+    // ==========================================
+    // ADD STUDENT (ENROLL)
+    // ==========================================
+
+    async function addStudent() {
+      const sname = document.getElementById('f-sname').value.trim();
+      const pname = document.getElementById('f-pname').value.trim();
+      const phone = document.getElementById('f-phone').value.trim();
+      const email = document.getElementById('f-email').value.trim();
+      const date  = document.getElementById('f-date').value;
+      const payDate = document.getElementById('f-paydate').value || date;
+      const track = document.getElementById('f-track').value;
+      const plan  = document.getElementById('f-plan').value;
+      const notes = document.getElementById('f-notes').value.trim();
+
+      if (!sname || !pname || !phone || !date) {
+        toast('Please fill all required fields', 'error');
+        return;
+      }
+
+      // Generate EMI schedule using preferred payment date
+      const result = generateEMI(payDate, track, plan);
+
+      // Insert student record with May-aware data
+      const { data: student, error } = await sb
+        .from('students')
+        .insert({
+          student_name: sname,
+          parent_name: pname,
+          parent_phone: phone,
+          parent_email: email || null,
+          admission_date: date,
+          preferred_payment_date: payDate !== date ? payDate : null,
+          track: track,
+          payment_plan: plan,
+          total_months: result.calendarMonths,
+          learning_months: result.learningMonths,
+          calendar_months: result.calendarMonths,
+          may_holidays: result.mayHolidays,
+          course_end_date: result.courseEndDate,
+          notes: notes || null
+        })
+        .select()
+        .single();
+
+      if (error) {
+        toast('Error: ' + error.message, 'error');
+        return;
+      }
+
+      // Insert EMI schedule (paid + free months)
+      const allRows = result.allEmis.map(e => ({ ...e, student_id: student.id }));
+
+      const { error: payErr } = await sb.from('payments').insert(allRows);
+      if (payErr) {
+        toast('EMI Error: ' + payErr.message, 'error');
+        return;
+      }
+
+      toast(`${sname} enrolled! ${result.emis.length} payments + ${result.freeMonthCount} free months.`);
+      closeModal('add-modal');
+
+      // Reset form
+      ['f-sname', 'f-pname', 'f-phone', 'f-email', 'f-notes'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('f-paydate').valueAsDate = new Date();
+      document.getElementById('emi-preview').style.display = 'none';
+
+      await loadDashboard();
+    }
+
+    // ==========================================
+    // PAYMENT — MARK AS PAID
+    // ==========================================
+
+    function openPayModal(payId, amount, studentName, dueDate, payNum, kitAmount) {
+      currentPaymentId = payId;
+
+      document.getElementById('pay-info').innerHTML =
+        `<strong>${studentName}</strong> — Payment #${payNum}
+         | Due: ${fmtDate(dueDate)}
+         | Amount: ${fmtMoney(amount)}${kitAmount > 0 ? ' + kit ' + fmtMoney(kitAmount) : ''}`;
+
+      document.getElementById('pay-amount').value = amount + (kitAmount || 0);
+      document.getElementById('pay-date').valueAsDate = new Date();
+      openModal('pay-modal');
+    }
+
+    async function markPaid() {
+      if (!currentPaymentId) return;
+
+      const paidDate  = document.getElementById('pay-date').value;
+      const paidAmt   = parseInt(document.getElementById('pay-amount').value) || 0;
+      const mode      = document.getElementById('pay-mode').value;
+      const receipt   = document.getElementById('pay-receipt').value.trim();
+      const notes     = document.getElementById('pay-notes').value.trim();
+
+      const { error } = await sb
+        .from('payments')
+        .update({
+          status: 'paid',
+          paid_date: paidDate,
+          paid_amount: paidAmt,
+          payment_mode: mode,
+          receipt_number: receipt || null,
+          notes: notes || null
+        })
+        .eq('id', currentPaymentId);
+
+      if (error) {
+        toast('Error: ' + error.message, 'error');
+        return;
+      }
+
+      toast('Payment recorded!');
+      closeModal('pay-modal');
+      currentPaymentId = null;
+      await loadDashboard();
+    }
+
+    // ==========================================
+    // COLLECTIONS TAB
+    // ==========================================
+
+    async function renderCollections(container) {
+      const now = new Date();
+      const selMonth = window._colMonth || (now.getMonth() + 1);
+      const selYear = window._colYear || now.getFullYear();
+
+      // Fetch all payments for selected month
+      const startDate = `${selYear}-${String(selMonth).padStart(2,'0')}-01`;
+      const endDate = selMonth === 12
+        ? `${selYear + 1}-01-01`
+        : `${selYear}-${String(selMonth + 1).padStart(2,'0')}-01`;
+
+      const { data: monthPayments } = await sb.from('payments')
+        .select('*, students(student_name, parent_name, parent_phone)')
+        .gte('due_date', startDate).lt('due_date', endDate)
+        .neq('status', 'free').neq('status', 'cancelled')
+        .order('due_date');
+
+      const payments = monthPayments || [];
+      const expected = payments.reduce((s, p) => s + p.amount + (p.kit_amount || 0), 0);
+      const collected = payments.filter(p => p.status === 'paid').reduce((s, p) => s + (p.paid_amount || p.amount) + (p.kit_amount || 0), 0);
+      const pending = payments.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount + (p.kit_amount || 0), 0);
+      const overdue = payments.filter(p => p.status === 'overdue').reduce((s, p) => s + p.amount + (p.kit_amount || 0), 0);
+      const paidCount = payments.filter(p => p.status === 'paid').length;
+      const totalCount = payments.length;
+      const collPct = totalCount > 0 ? Math.round(paidCount / totalCount * 100) : 0;
+
+      const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+
+      container.innerHTML = `
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap">
+          <h3 style="font-size:16px; font-weight:700; color:var(--accent)">💰 Collections</h3>
+          <select id="col-month" onchange="window._colMonth=+this.value; renderCollections(document.getElementById('tab-content'))"
+            style="padding:6px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:var(--font); font-size:13px">
+            ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => `<option value="${m}" ${m===selMonth?'selected':''}>${monthNames[m]}</option>`).join('')}
+          </select>
+          <select id="col-year" onchange="window._colYear=+this.value; renderCollections(document.getElementById('tab-content'))"
+            style="padding:6px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:var(--font); font-size:13px">
+            ${[2025,2026,2027,2028,2029,2030].map(y => `<option value="${y}" ${y===selYear?'selected':''}>${y}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-label">Expected</div>
+            <div class="stat-value" style="color:var(--accent)">${fmtMoney(expected)}</div>
+            <div style="font-size:11px; color:var(--muted)">${totalCount} payments due</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Collected</div>
+            <div class="stat-value" style="color:var(--green)">${fmtMoney(collected)}</div>
+            <div style="font-size:11px; color:var(--green)">${paidCount}/${totalCount} paid (${collPct}%)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value" style="color:var(--accent)">${fmtMoney(pending)}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Overdue</div>
+            <div class="stat-value" style="color:var(--red)">${fmtMoney(overdue)}</div>
+          </div>
+        </div>
+
+        ${selMonth === 5 ? '<div style="padding:10px; background:var(--orange-bg); border:1px solid #fcd34d; border-radius:8px; margin-bottom:12px; font-size:12px; color:var(--orange); text-align:center"><strong>🔴 May Holiday Month</strong> — No classes but payments still collected as per schedule.</div>' : ''}
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Student</th><th>Phone</th><th>Due Date</th><th>Amount</th><th>Level</th><th>Status</th><th>Paid Date</th><th>Mode</th></tr></thead>
+            <tbody>
+              ${payments.length === 0 ? '<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--muted)">No payments due in ' + monthNames[selMonth] + ' ' + selYear + '</td></tr>' : ''}
+              ${payments.map(p => {
+                const s = p.students || {};
+                const rowBg = p.status === 'paid' ? 'background:rgba(240,253,244,0.4)' : p.status === 'overdue' ? 'background:rgba(254,242,242,0.4)' : '';
+                return `<tr style="${rowBg}">
+                  <td style="font-weight:600">${s.student_name || '—'}</td>
+                  <td><a class="phone-link" href="tel:${s.parent_phone}">${s.parent_phone || ''}</a></td>
+                  <td>${fmtDate(p.due_date)}</td>
+                  <td style="font-family:var(--mono)">${fmtMoney(p.amount)}${p.kit_amount > 0 ? '<br><span style="font-size:10px;color:var(--muted)">+kit '+fmtMoney(p.kit_amount)+'</span>' : ''}</td>
+                  <td>${p.level_at_payment}</td>
+                  <td><span class="badge badge-${p.status}">${p.status}</span></td>
+                  <td style="font-size:12px">${p.paid_date ? fmtDate(p.paid_date) : '—'}</td>
+                  <td style="font-size:12px">${p.payment_mode || '—'}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // EXPENSES TAB
+    // ==========================================
+
+    async function renderExpenses(container) {
+      const now = new Date();
+      const selMonth = window._expMonth || (now.getMonth() + 1);
+      const selYear = window._expYear || now.getFullYear();
+      const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+
+      const startDate = `${selYear}-${String(selMonth).padStart(2,'0')}-01`;
+      const endDate = selMonth === 12
+        ? `${selYear + 1}-01-01`
+        : `${selYear}-${String(selMonth + 1).padStart(2,'0')}-01`;
+
+      const { data: expenses } = await sb.from('expenses')
+        .select('*')
+        .gte('expense_date', startDate).lt('expense_date', endDate)
+        .order('expense_date', { ascending: false });
+
+      const exps = expenses || [];
+      const totalExp = exps.reduce((s, e) => s + e.amount, 0);
+
+      // Category breakdown
+      const catMap = {};
+      exps.forEach(e => { catMap[e.category] = (catMap[e.category] || 0) + e.amount; });
+      const catList = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+
+      container.innerHTML = `
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap">
+          <h3 style="font-size:16px; font-weight:700; color:var(--red)">📤 Expenses</h3>
+          <select onchange="window._expMonth=+this.value; renderExpenses(document.getElementById('tab-content'))"
+            style="padding:6px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:var(--font); font-size:13px">
+            ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => `<option value="${m}" ${m===selMonth?'selected':''}>${monthNames[m]}</option>`).join('')}
+          </select>
+          <select onchange="window._expYear=+this.value; renderExpenses(document.getElementById('tab-content'))"
+            style="padding:6px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:var(--font); font-size:13px">
+            ${[2025,2026,2027,2028,2029,2030].map(y => `<option value="${y}" ${y===selYear?'selected':''}>${y}</option>`).join('')}
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="document.getElementById('exp-date').valueAsDate=new Date(); openModal('expense-modal')">+ Add Expense</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value" style="color:var(--red)">${fmtMoney(totalExp)}</div>
+            <div style="font-size:11px; color:var(--muted)">${exps.length} entries</div>
+          </div>
+          ${catList.slice(0, 3).map(([cat, amt]) => `
+            <div class="stat-card">
+              <div class="stat-label">${cat}</div>
+              <div class="stat-value" style="font-size:18px; color:var(--text)">${fmtMoney(amt)}</div>
+              <div style="font-size:11px; color:var(--muted)">${Math.round(amt/totalExp*100) || 0}% of total</div>
+            </div>
+          `).join('')}
+        </div>
+
+        ${catList.length > 0 ? `
+        <div style="background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:16px;
+          box-shadow:var(--shadow); border:1.5px solid var(--border)">
+          <h4 style="font-size:13px; color:var(--muted); margin-bottom:10px">CATEGORY BREAKDOWN</h4>
+          ${catList.map(([cat, amt]) => {
+            const pct = Math.round(amt / totalExp * 100);
+            return `<div style="display:flex; align-items:center; gap:8px; margin-bottom:6px">
+              <span style="width:120px; font-size:12px; font-weight:600">${cat}</span>
+              <div style="flex:1; height:16px; background:var(--bg); border-radius:4px; overflow:hidden">
+                <div style="width:${pct}%; height:100%; background:linear-gradient(90deg, var(--accent), #a78bfa); border-radius:4px"></div>
+              </div>
+              <span style="font-family:var(--mono); font-size:12px; min-width:80px; text-align:right">${fmtMoney(amt)}</span>
+              <span style="font-size:11px; color:var(--muted); min-width:35px">${pct}%</span>
+            </div>`;
+          }).join('')}
+        </div>` : ''}
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Mode</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${exps.length === 0 ? '<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--muted)">No expenses recorded for ' + monthNames[selMonth] + ' ' + selYear + '</td></tr>' : ''}
+              ${exps.map(e => `
+                <tr>
+                  <td>${fmtDate(e.expense_date)}</td>
+                  <td><span class="badge" style="background:var(--accent-light); color:var(--accent)">${e.category}</span></td>
+                  <td>${e.description}${e.notes ? '<br><span style="font-size:10px; color:var(--muted)">'+e.notes+'</span>' : ''}</td>
+                  <td style="font-family:var(--mono); font-weight:600; color:var(--red)">${fmtMoney(e.amount)}</td>
+                  <td style="font-size:12px">${e.payment_mode || '—'}</td>
+                  <td><button class="btn btn-delete btn-sm" onclick="deleteExpense('${e.id}')">✕</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function addExpense() {
+      const date = document.getElementById('exp-date').value;
+      const cat = document.getElementById('exp-cat').value;
+      const desc = document.getElementById('exp-desc').value.trim();
+      const amt = parseInt(document.getElementById('exp-amt').value) || 0;
+      const mode = document.getElementById('exp-mode').value;
+      const notes = document.getElementById('exp-notes').value.trim();
+
+      if (!date || !desc || !amt) { toast('Fill date, description, and amount', 'error'); return; }
+
+      const { error } = await sb.from('expenses').insert({
+        expense_date: date, category: cat, description: desc,
+        amount: amt, payment_mode: mode, notes: notes || null
+      });
+
+      if (error) { toast('Error: ' + error.message, 'error'); return; }
+      toast(`Expense ₹${amt.toLocaleString()} added!`);
+      closeModal('expense-modal');
+      document.getElementById('exp-desc').value = '';
+      document.getElementById('exp-amt').value = '';
+      document.getElementById('exp-notes').value = '';
+      renderExpenses(document.getElementById('tab-content'));
+    }
+
+    async function deleteExpense(id) {
+      if (!confirm('Delete this expense?')) return;
+      const { error } = await sb.from('expenses').delete().eq('id', id);
+      if (error) { toast('Error: ' + error.message, 'error'); return; }
+      toast('Expense deleted');
+      renderExpenses(document.getElementById('tab-content'));
+    }
+
+    // ==========================================
+    // P&L DASHBOARD
+    // ==========================================
+
+    async function renderPnL(container) {
+      const now = new Date();
+      const selMonth = window._pnlMonth || (now.getMonth() + 1);
+      const selYear = window._pnlYear || now.getFullYear();
+      const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+
+      const startDate = `${selYear}-${String(selMonth).padStart(2,'0')}-01`;
+      const endDate = selMonth === 12 ? `${selYear+1}-01-01` : `${selYear}-${String(selMonth+1).padStart(2,'0')}-01`;
+
+      // Revenue: payments PAID in this month (by paid_date, not due_date)
+      const { data: paidPayments } = await sb.from('payments')
+        .select('paid_amount, amount, kit_amount, is_kit_included, paid_date')
+        .gte('paid_date', startDate).lt('paid_date', endDate)
+        .eq('status', 'paid');
+
+      const paid = paidPayments || [];
+      const revenue = paid.reduce((s, p) => s + (p.paid_amount || p.amount) + (p.is_kit_included ? (p.kit_amount || 0) : 0), 0);
+
+      // Expenses this month
+      const { data: exps } = await sb.from('expenses')
+        .select('amount, category')
+        .gte('expense_date', startDate).lt('expense_date', endDate);
+
+      const expenses = exps || [];
+      const totalExpense = expenses.reduce((s, e) => s + e.amount, 0);
+
+      // P&L
+      const profit = revenue - totalExpense;
+      const isProfit = profit >= 0;
+
+      // Active students count
+      const { count: activeStudents } = await sb.from('students')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'active');
+
+      // Expected monthly revenue (all active students × average monthly fee)
+      const avgMonthly = CONFIG.quarterly_fee / 3;
+      const expectedMonthly = (activeStudents || 0) * avgMonthly;
+
+      // Break-even: how many students needed to cover expenses
+      const profitPerStudent = avgMonthly - cost_B;
+      const breakEven = totalExpense > 0 ? Math.ceil(totalExpense / profitPerStudent) : 0;
+
+      // Category breakdown for expenses
+      const catMap = {};
+      expenses.forEach(e => { catMap[e.category] = (catMap[e.category] || 0) + e.amount; });
+
+      // Yearly totals
+      const yearStart = `${selYear}-01-01`;
+      const yearEnd = `${selYear + 1}-01-01`;
+
+      const { data: yearPaid } = await sb.from('payments')
+        .select('paid_amount, amount, kit_amount, is_kit_included')
+        .gte('paid_date', yearStart).lt('paid_date', yearEnd)
+        .eq('status', 'paid');
+      const yearRevenue = (yearPaid || []).reduce((s, p) => s + (p.paid_amount || p.amount) + (p.is_kit_included ? (p.kit_amount||0) : 0), 0);
+
+      const { data: yearExps } = await sb.from('expenses')
+        .select('amount')
+        .gte('expense_date', yearStart).lt('expense_date', yearEnd);
+      const yearExpense = (yearExps || []).reduce((s, e) => s + e.amount, 0);
+      const yearProfit = yearRevenue - yearExpense;
+
+      container.innerHTML = `
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap">
+          <h3 style="font-size:16px; font-weight:700; color:var(--accent)">📊 Profit & Loss</h3>
+          <select onchange="window._pnlMonth=+this.value; renderPnL(document.getElementById('tab-content'))"
+            style="padding:6px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:var(--font); font-size:13px">
+            ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => `<option value="${m}" ${m===selMonth?'selected':''}>${monthNames[m]}</option>`).join('')}
+          </select>
+          <select onchange="window._pnlYear=+this.value; renderPnL(document.getElementById('tab-content'))"
+            style="padding:6px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:var(--font); font-size:13px">
+            ${[2025,2026,2027,2028,2029,2030].map(y => `<option value="${y}" ${y===selYear?'selected':''}>${y}</option>`).join('')}
+          </select>
+        </div>
+
+        <!-- BIG P&L CARD -->
+        <div style="background:${isProfit ? 'linear-gradient(135deg, #e8f5e9, #c8e6c9)' : 'linear-gradient(135deg, #ffebee, #ffcdd2)'};
+          border-radius:16px; padding:28px; text-align:center; margin-bottom:20px;
+          box-shadow:var(--shadow-md); border:2px solid ${isProfit ? '#66bb6a' : '#ef5350'}">
+          <div style="font-size:12px; font-weight:600; color:${isProfit ? '#2e7d32' : '#c62828'}; text-transform:uppercase; letter-spacing:1px">
+            ${monthNames[selMonth]} ${selYear} — ${isProfit ? '✅ PROFIT' : '🔴 LOSS'}
+          </div>
+          <div style="font-size:48px; font-weight:700; color:${isProfit ? '#1b5e20' : '#b71c1c'}; font-family:var(--mono); margin:8px 0">
+            ${isProfit ? '+' : '-'}${fmtMoney(Math.abs(profit))}
+          </div>
+          <div style="font-size:13px; color:${isProfit ? '#388e3c' : '#d32f2f'}">
+            Revenue ${fmtMoney(revenue)} − Expenses ${fmtMoney(totalExpense)}
+          </div>
+        </div>
+
+        <!-- REVENUE vs EXPENSE -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px">
+          <div style="background:var(--card); border-radius:14px; padding:20px; box-shadow:var(--shadow); border:1.5px solid var(--border)">
+            <div style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px">💰 Revenue (Collected)</div>
+            <div style="font-size:28px; font-weight:700; color:var(--green); font-family:var(--mono)">${fmtMoney(revenue)}</div>
+            <div style="font-size:12px; color:var(--muted); margin-top:4px">${paid.length} payments received</div>
+            <hr style="border:none; border-top:1px solid var(--border); margin:10px 0">
+            <div style="font-size:11px; color:var(--muted)">Expected (${activeStudents || 0} students): <strong style="color:var(--accent)">${fmtMoney(Math.round(expectedMonthly))}</strong></div>
+          </div>
+          <div style="background:var(--card); border-radius:14px; padding:20px; box-shadow:var(--shadow); border:1.5px solid var(--border)">
+            <div style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px">📤 Expenses</div>
+            <div style="font-size:28px; font-weight:700; color:var(--red); font-family:var(--mono)">${fmtMoney(totalExpense)}</div>
+            <div style="font-size:12px; color:var(--muted); margin-top:4px">${expenses.length} entries</div>
+            <hr style="border:none; border-top:1px solid var(--border); margin:10px 0">
+            ${Object.entries(catMap).slice(0, 3).map(([c, a]) => `<div style="font-size:11px; color:var(--muted)">${c}: <strong>${fmtMoney(a)}</strong></div>`).join('')}
+          </div>
+        </div>
+
+        <!-- BUSINESS METRICS -->
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-label">Active Students</div>
+            <div class="stat-value" style="color:var(--accent)">${activeStudents || 0}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Revenue / Student</div>
+            <div class="stat-value" style="font-size:18px">${activeStudents ? fmtMoney(Math.round(revenue / activeStudents)) : '—'}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Break-even</div>
+            <div class="stat-value" style="font-size:18px; color:${(activeStudents||0) >= breakEven ? 'var(--green)' : 'var(--red)'}">${breakEven} students</div>
+            <div style="font-size:10px; color:var(--muted)">need ${breakEven} to cover expenses</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Profit / Student / Mo</div>
+            <div class="stat-value" style="font-size:18px; color:var(--green)">${fmtMoney(Math.round(profitPerStudent))}</div>
+            <div style="font-size:10px; color:var(--muted)">after MF+CI</div>
+          </div>
+        </div>
+
+        <!-- YEARLY SUMMARY -->
+        <div style="background:var(--card); border-radius:14px; padding:20px; margin-top:16px;
+          box-shadow:var(--shadow); border:1.5px solid var(--border)">
+          <h4 style="font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px">
+            📅 Year ${selYear} Summary (Jan–Dec)
+          </h4>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; text-align:center">
+            <div>
+              <div style="font-size:11px; color:var(--muted)">Total Revenue</div>
+              <div style="font-size:22px; font-weight:700; color:var(--green); font-family:var(--mono)">${fmtMoney(yearRevenue)}</div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:var(--muted)">Total Expenses</div>
+              <div style="font-size:22px; font-weight:700; color:var(--red); font-family:var(--mono)">${fmtMoney(yearExpense)}</div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:var(--muted)">Net ${yearProfit >= 0 ? 'Profit' : 'Loss'}</div>
+              <div style="font-size:22px; font-weight:700; color:${yearProfit >= 0 ? 'var(--green)' : 'var(--red)'}; font-family:var(--mono)">${yearProfit >= 0 ? '+' : '-'}${fmtMoney(Math.abs(yearProfit))}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // cost_B for P&L calculation
+    const cost_B = 437;
+
+    // ==========================================
+    // SETTINGS TAB
+    // ==========================================
+
+    function renderSettings(container) {
+      container.innerHTML = `
+        <div style="max-width:700px">
+          <h3 style="font-size:16px; font-weight:700; color:var(--accent); margin-bottom:16px">Center Settings</h3>
+
+          <div style="background:var(--card); border-radius:var(--radius); padding:24px;
+            box-shadow:var(--shadow); border:1.5px solid var(--border); margin-bottom:20px">
+            <h4 style="font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px">
+              Center Information
+            </h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Center Name</label>
+                <input id="s-name" value="${CONFIG.center_name || 'UCMAS 2.0'}">
+              </div>
+              <div class="form-group">
+                <label>Region / City</label>
+                <input id="s-region" value="${CONFIG.region || ''}">
+              </div>
+              <div class="form-group">
+                <label>Class Type</label>
+                <select id="s-class">
+                  <option value="A" ${CONFIG.class_type === 'A' ? 'selected' : ''}>Class A (Mumbai Region)</option>
+                  <option value="B" ${CONFIG.class_type === 'B' ? 'selected' : ''}>Class B (Ambernath / Other)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Holiday Month (no classes)</label>
+                <select id="s-holiday">
+                  ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
+                    const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    return `<option value="${m}" ${CONFIG.holiday_month === m ? 'selected' : ''}>${names[m-1]}</option>`;
+                  }).join('')}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--card); border-radius:var(--radius); padding:24px;
+            box-shadow:var(--shadow); border:1.5px solid var(--border); margin-bottom:20px">
+            <h4 style="font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px">
+              Fee Structure
+            </h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Quarterly Fee (per 3 months)</label>
+                <input id="s-qfee" type="number" value="${CONFIG.quarterly_fee || 4000}">
+              </div>
+              <div class="form-group">
+                <label>Half-Yearly Fee (per 6 months)</label>
+                <input id="s-hfee" type="number" value="${CONFIG.halfyearly_fee || 7500}">
+              </div>
+              <div class="form-group">
+                <label>Yearly Fee (per 12 months)</label>
+                <input id="s-yfee" type="number" value="${CONFIG.yearly_fee || 14000}">
+              </div>
+              <div class="form-group">
+                <label>Kit Fee (one-time)</label>
+                <input id="s-kit" type="number" value="${CONFIG.kit_fee || 2006}">
+              </div>
+            </div>
+            <div style="margin-top:12px; padding:10px; background:var(--bg); border-radius:8px; font-size:12px; color:var(--muted)">
+              <strong>Per-month breakdown:</strong>
+              Quarterly = ₹${Math.round((CONFIG.quarterly_fee || 4000) / 3).toLocaleString()}/mo |
+              Half-Yearly = ₹${Math.round((CONFIG.halfyearly_fee || 7500) / 6).toLocaleString()}/mo |
+              Yearly = ₹${Math.round((CONFIG.yearly_fee || 14000) / 12).toLocaleString()}/mo
+            </div>
+          </div>
+
+          <div style="background:var(--card); border-radius:var(--radius); padding:24px;
+            box-shadow:var(--shadow); border:1.5px solid var(--border); margin-bottom:20px">
+            <h4 style="font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px">
+              Admin Account
+            </h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Username</label>
+                <input id="s-user" value="${JSON.parse(sessionStorage.getItem('admin') || '{}').username || 'admin'}" readonly
+                  style="opacity:0.6; cursor:not-allowed">
+              </div>
+              <div class="form-group">
+                <label>New Password (leave blank to keep current)</label>
+                <input id="s-pass" type="password" placeholder="Enter new password">
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--card); border-radius:var(--radius); padding:24px;
+            box-shadow:var(--shadow); border:1.5px solid var(--border); margin-bottom:20px">
+            <h4 style="font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px">
+              Franchise Setup (Share with new center owners)
+            </h4>
+            <p style="font-size:13px; color:var(--muted); margin-bottom:12px">
+              To sell this system to another center, they need:
+            </p>
+            <div style="background:var(--bg); border-radius:8px; padding:14px; font-size:12px; font-family:var(--mono); color:var(--text); line-height:1.8">
+              1. Create free account at <a href="https://supabase.com" target="_blank" style="color:var(--accent)">supabase.com</a><br>
+              2. Create new project (Mumbai region recommended)<br>
+              3. Run the database setup SQL (you provide this)<br>
+              4. Create free account at <a href="https://github.com" target="_blank" style="color:var(--accent)">github.com</a><br>
+              5. Upload index.html + emi.html with their Supabase URL & key<br>
+              6. Enable GitHub Pages → Site is live!
+            </div>
+            <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
+              <button class="btn btn-primary btn-sm" onclick="downloadSetupSQL()">Download Setup SQL</button>
+              <button class="btn btn-ghost btn-sm" onclick="copySupabaseConfig()">Copy Current Config</button>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:8px; justify-content:flex-end">
+            <button class="btn btn-ghost" onclick="switchTab('students')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveSettings()" style="padding:10px 24px">Save Settings</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function saveSettings() {
+      const name    = document.getElementById('s-name').value.trim();
+      const region  = document.getElementById('s-region').value.trim();
+      const classT  = document.getElementById('s-class').value;
+      const holiday = parseInt(document.getElementById('s-holiday').value);
+      const qFee    = parseInt(document.getElementById('s-qfee').value) || 4000;
+      const hFee    = parseInt(document.getElementById('s-hfee').value) || 7500;
+      const yFee    = parseInt(document.getElementById('s-yfee').value) || 14000;
+      const kitFee  = parseInt(document.getElementById('s-kit').value) || 2006;
+      const newPass = document.getElementById('s-pass').value.trim();
+
+      if (!name || !region) {
+        toast('Center name and region are required', 'error');
+        return;
+      }
+
+      // Update center config
+      const { error: cErr } = await sb
+        .from('center_config')
+        .update({
+          center_name: name,
+          region: region,
+          class_type: classT,
+          holiday_month: holiday,
+          quarterly_fee: qFee,
+          halfyearly_fee: hFee,
+          yearly_fee: yFee,
+          kit_fee: kitFee
+        })
+        .eq('id', CONFIG.id);
+
+      if (cErr) {
+        toast('Error saving settings: ' + cErr.message, 'error');
+        return;
+      }
+
+      // Update password if provided
+      if (newPass) {
+        const admin = JSON.parse(sessionStorage.getItem('admin') || '{}');
+        const { error: pErr } = await sb
+          .from('admin_users')
+          .update({ password_hash: newPass })
+          .eq('id', admin.id);
+
+        if (pErr) {
+          toast('Password update failed: ' + pErr.message, 'error');
+          return;
+        }
+      }
+
+      toast('Settings saved!' + (newPass ? ' Password updated.' : ''));
+      await loadConfig();
+      await loadDashboard();
+    }
+
+    function downloadSetupSQL() {
+      const sql = `-- UCMAS 2.0 Payment Tracker — Database Setup
+-- Run this in your Supabase SQL Editor (supabase.com → your project → SQL Editor)
+
+-- Center configuration
+CREATE TABLE public.center_config (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  center_name text NOT NULL DEFAULT 'UCMAS 2.0',
+  region text NOT NULL DEFAULT 'Your City',
+  class_type text NOT NULL DEFAULT 'B' CHECK (class_type IN ('A', 'B')),
+  quarterly_fee integer NOT NULL DEFAULT 4000,
+  halfyearly_fee integer NOT NULL DEFAULT 7500,
+  yearly_fee integer NOT NULL DEFAULT 14000,
+  kit_fee integer NOT NULL DEFAULT 2006,
+  holiday_month integer NOT NULL DEFAULT 5,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Students
+CREATE TABLE public.students (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_name text NOT NULL,
+  parent_name text NOT NULL,
+  parent_phone text NOT NULL,
+  parent_email text,
+  admission_date date NOT NULL,
+  track text NOT NULL CHECK (track IN ('foundation', 'basic')),
+  payment_plan text NOT NULL CHECK (payment_plan IN ('quarterly', 'halfyearly', 'yearly')),
+  total_months integer NOT NULL,
+  learning_months integer,
+  calendar_months integer,
+  may_holidays integer DEFAULT 0,
+  course_end_date date,
+  status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'dropped')),
+  dropped_date date,
+  drop_reason text,
+  whatsapp_enabled boolean NOT NULL DEFAULT true,
+  notes text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Payments / EMI schedule
+CREATE TABLE public.payments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id uuid NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
+  payment_number integer NOT NULL,
+  due_date date NOT NULL,
+  amount integer NOT NULL,
+  is_kit_included boolean DEFAULT false,
+  kit_amount integer DEFAULT 0,
+  level_at_payment text NOT NULL,
+  is_may_holiday boolean DEFAULT false,
+  is_prorated boolean DEFAULT false,
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'overdue', 'waived', 'cancelled', 'free')),
+  paid_date date,
+  paid_amount integer,
+  payment_mode text,
+  receipt_number text,
+  notes text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Admin users
+CREATE TABLE public.admin_users (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  username text UNIQUE NOT NULL,
+  password_hash text NOT NULL,
+  center_name text NOT NULL DEFAULT 'UCMAS 2.0',
+  role text NOT NULL DEFAULT 'admin' CHECK (role IN ('admin', 'staff')),
+  created_at timestamptz DEFAULT now()
+);
+
+-- Indexes
+CREATE INDEX idx_payments_student_id ON public.payments(student_id);
+CREATE INDEX idx_payments_due_date ON public.payments(due_date);
+CREATE INDEX idx_payments_status ON public.payments(status);
+CREATE INDEX idx_students_status ON public.students(status);
+
+-- RLS
+ALTER TABLE public.center_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all" ON public.center_config FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON public.students FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON public.payments FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON public.admin_users FOR ALL USING (true) WITH CHECK (true);
+
+-- Auto-update timestamps
+CREATE OR REPLACE FUNCTION update_modified_column()
+RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ LANGUAGE plpgsql;
+CREATE TRIGGER update_students_modtime BEFORE UPDATE ON public.students FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+CREATE TRIGGER update_payments_modtime BEFORE UPDATE ON public.payments FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+
+-- Default config (CHANGE THESE for your center!)
+INSERT INTO public.center_config (center_name, region, class_type, quarterly_fee, halfyearly_fee, yearly_fee, kit_fee, holiday_month)
+VALUES ('Your Center Name', 'Your City', 'B', 4000, 7500, 14000, 2006, 5);
+
+-- Default admin (CHANGE PASSWORD after first login!)
+INSERT INTO public.admin_users (username, password_hash, center_name, role)
+VALUES ('admin', 'admin123', 'Your Center Name', 'admin');
+
+-- Done! Now go to Settings in your dashboard to customize fees and center name.
+`;
+      const blob = new Blob([sql], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ucmas-payment-tracker-setup.sql';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('SQL file downloaded! Share this with franchisees.');
+    }
+
+    function copySupabaseConfig() {
+      const config = `UCMAS 2.0 Payment Tracker — Current Config
+==========================================
+Center: ${CONFIG.center_name}
+Region: ${CONFIG.region}
+Class: ${CONFIG.class_type}
+Quarterly: ₹${CONFIG.quarterly_fee}
+Half-Yearly: ₹${CONFIG.halfyearly_fee}
+Yearly: ₹${CONFIG.yearly_fee}
+Kit Fee: ₹${CONFIG.kit_fee}
+Holiday Month: ${CONFIG.holiday_month}
+
+Supabase URL: ${SUPABASE_URL}
+Supabase Key: ${SUPABASE_KEY}
+==========================================
+`;
+      navigator.clipboard.writeText(config);
+      toast('Config copied to clipboard!');
+    }
+
+    // ==========================================
+    // DROP STUDENT
+    // ==========================================
+
+    let dropStudentId = null;
+
+    function openDropModal(studentId, studentName) {
+      dropStudentId = studentId;
+      document.getElementById('drop-info').innerHTML =
+        `Dropping: <strong>${studentName}</strong>`;
+      document.getElementById('drop-date').valueAsDate = new Date();
+      document.getElementById('drop-notes').value = '';
+      openModal('drop-modal');
+    }
+
+    async function confirmDrop() {
+      if (!dropStudentId) return;
+
+      const dropDate = document.getElementById('drop-date').value;
+      const reason = document.getElementById('drop-reason').value;
+      const notes = document.getElementById('drop-notes').value.trim();
+
+      // 1. Mark student as dropped
+      const { error: sErr } = await sb
+        .from('students')
+        .update({
+          status: 'dropped',
+          dropped_date: dropDate,
+          drop_reason: reason + (notes ? ': ' + notes : ''),
+          whatsapp_enabled: false
+        })
+        .eq('id', dropStudentId);
+
+      if (sErr) {
+        toast('Error: ' + sErr.message, 'error');
+        return;
+      }
+
+      // 2. Cancel all pending & overdue payments
+      const { error: pErr } = await sb
+        .from('payments')
+        .update({ status: 'cancelled' })
+        .eq('student_id', dropStudentId)
+        .in('status', ['pending', 'overdue']);
+
+      if (pErr) {
+        toast('Payment cancel error: ' + pErr.message, 'error');
+        return;
+      }
+
+      toast('Student dropped. Pending payments cancelled. WhatsApp disabled.');
+      closeModal('drop-modal');
+      dropStudentId = null;
+      await loadDashboard();
+    }
+
+    // ==========================================
+    // DELETE STUDENT (PERMANENT)
+    // ==========================================
+
+    let deleteStudentId = null;
+    let deleteStudentName = '';
+
+    function openDeleteModal(studentId, studentName) {
+      deleteStudentId = studentId;
+      deleteStudentName = studentName;
+      document.getElementById('delete-info').innerHTML =
+        `Permanently deleting: <strong>${studentName}</strong><br>
+         <span style="font-size:12px">All payment records will also be deleted.</span>`;
+      document.getElementById('delete-confirm-name').value = '';
+      openModal('delete-modal');
+    }
+
+    async function confirmDelete() {
+      if (!deleteStudentId) return;
+
+      const typed = document.getElementById('delete-confirm-name').value.trim();
+      if (typed !== deleteStudentName) {
+        toast('Student name does not match. Please type the exact name.', 'error');
+        return;
+      }
+
+      // Payments auto-deleted via ON DELETE CASCADE
+      const { error } = await sb
+        .from('students')
+        .delete()
+        .eq('id', deleteStudentId);
+
+      if (error) {
+        toast('Error: ' + error.message, 'error');
+        return;
+      }
+
+      toast(`${deleteStudentName} permanently deleted.`);
+      closeModal('delete-modal');
+      deleteStudentId = null;
+      deleteStudentName = '';
+      await loadDashboard();
+    }
+
+    // ==========================================
+    // SHARE PARENT LINK
+    // ==========================================
+
+    function getParentLink(studentId) {
+      const base = window.location.href.replace(/\/[^/]*$/, '/');
+      return base + 'emi.html?id=' + studentId;
+    }
+
+    function quickShare(studentId) {
+      const link = getParentLink(studentId);
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(link);
+        toast('Parent link copied to clipboard!');
+      } else {
+        prompt('Copy this link:', link);
+      }
+    }
+
+    function shareStudentLink(studentId, studentName, parentPhone) {
+      const link = getParentLink(studentId);
+
+      // Try clipboard first
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(link).then(() => {
+          toast('Link copied! Share it with the parent.');
+        });
+      }
+
+      // Also offer WhatsApp share
+      let cleanPhone = parentPhone.replace(/\D/g, '');
+      if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+
+      const message = encodeURIComponent(
+        `Dear Parent,\n\n` +
+        `Here is ${studentName}'s UCMAS fee payment schedule:\n\n` +
+        `📋 ${link}\n\n` +
+        `You can check payment status and upcoming due dates anytime using this link.\n\n` +
+        `Thank you,\n${CONFIG.center_name} — ${CONFIG.region}`
+      );
+
+      // Show a small inline prompt
+      const tc = document.getElementById('tab-content');
+      const existing = document.getElementById('share-box');
+      if (existing) existing.remove();
+
+      const div = document.createElement('div');
+      div.id = 'share-box';
+      div.style.cssText = 'padding:14px 16px; background:var(--accent-light); border:1.5px solid var(--accent); border-radius:10px; margin-bottom:12px; font-size:13px;';
+      div.innerHTML = `
+        <strong style="color:var(--accent)">Parent Link Ready!</strong><br>
+        <input type="text" value="${link}" readonly
+          style="width:100%; padding:8px 10px; margin:8px 0; background:var(--card); border:1px solid var(--border);
+          border-radius:6px; font-family:var(--mono); font-size:11px; color:var(--text)"
+          onclick="this.select()">
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText('${link}');toast('Copied!')">Copy Link</button>
+          <button class="wa-btn" onclick="window.open('https://wa.me/${cleanPhone}?text=${message}','_blank')"
+            style="padding:6px 14px; font-size:12px">Send via WhatsApp</button>
+        </div>
+      `;
+      tc.insertBefore(div, tc.children[1]);
+    }
+
+    // ==========================================
+    // WHATSAPP REMINDER
+    // ==========================================
+
+    function sendWhatsApp(phone, studentName, dueDate, amount) {
+      let cleanPhone = phone.replace(/\D/g, '');
+      if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+
+      const message = encodeURIComponent(
+        `Dear Parent,\n\n` +
+        `This is a reminder for ${studentName}'s UCMAS fee payment.\n\n` +
+        `📅 Due Date: ${dueDate}\n` +
+        `💰 Amount: ₹${Number(amount).toLocaleString('en-IN')}\n\n` +
+        `Please make the payment at your earliest convenience.\n\n` +
+        `Thank you,\n${CONFIG.center_name} — ${CONFIG.region}`
+      );
+
+      window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+    }
+  </script>
+</body>
+</html>
