@@ -18,7 +18,20 @@
     <style>
         body { 
             font-family: 'DM Sans', sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            /* Base white background */
+            background-color: #ffffff;
+            /* Multi-layer gradient matching the Franchise Meet theme */
+            background-image: 
+                /* Subtle technical grid overlay */
+                linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px),
+                /* Top-Right Indigo/Blue Glow */
+                radial-gradient(circle at 100% 0%, #1a2a7b 0%, rgba(26, 42, 123, 0.4) 30%, transparent 70%),
+                /* Bottom-Left Vibrant Red Glow */
+                radial-gradient(circle at 0% 100%, #e31e24 0%, rgba(227, 30, 36, 0.3) 30%, transparent 70%);
+            background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
             background-attachment: fixed;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
@@ -861,3 +874,15 @@
             background: rgba(255,255,255,0.08);
             backdrop-filter: blur(10px);
             border-top: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.7);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        ">
+            © 2026 Developed by <span style="
+            color: #fff;
+            font-weight: 700;
+            ">Practice Buddy</span>. All rights reserved.
+        </footer>
+</body>
+</html>
