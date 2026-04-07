@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBS Education - Unit Dashboard (Updated)</title>
+    <title>UCMAS Mumbai - Unit Franchisee Dashboard</title>
 
     <script>
-        if (sessionStorage.getItem('userRole') !== 'unit_franchisee') {
+        // Production Security Gatekeeper
+        const role = sessionStorage.getItem('userRole');
+        if (role !== 'unit_franchisee') {
             window.location.replace('index.html'); 
         }
     </script>
@@ -20,11 +22,16 @@
             font-family: 'Nunito', sans-serif;
             min-height: 100vh;
             margin: 0;
+            /* Base white background */
             background-color: #ffffff;
+            /* Multi-layer gradient matching the Franchise Meet theme */
             background-image: 
+                /* Subtle technical grid overlay */
                 linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px),
+                /* Top-Right Indigo/Blue Glow */
                 radial-gradient(circle at 100% 0%, #1a2a7b 0%, rgba(26, 42, 123, 0.4) 30%, transparent 70%),
+                /* Bottom-Left Vibrant Red Glow */
                 radial-gradient(circle at 0% 100%, #e31e24 0%, rgba(227, 30, 36, 0.3) 30%, transparent 70%);
             background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
             background-attachment: fixed;
@@ -37,6 +44,70 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
         
+        .status-toggle { 
+            position: relative; 
+            width: 50px; 
+            height: 26px; 
+            background: #e5e7eb; 
+            border-radius: 13px; 
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .status-toggle.active { background: #10b981; }
+        .status-toggle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .status-toggle.active::after { transform: translateX(24px); }
+        
+        .password-field { 
+            filter: blur(4px); 
+            transition: filter 0.3s;
+            cursor: pointer;
+        }
+        .password-field.visible { filter: blur(0); }
+        
+        table { border-collapse: separate; border-spacing: 0; }
+        tbody tr { transition: all 0.2s; }
+        tbody tr:hover { background: #f9fafb; transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        
+        .action-btn {
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .edit-btn { background: #3b82f6; color: white; }
+        .edit-btn:hover { background: #2563eb; }
+        
+        .search-box {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .search-box:focus { 
+            outline: none; 
+            border-color: #667eea; 
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
         .stat-card {
             background: white;
             border-radius: 20px;
@@ -44,6 +115,11 @@
             transition: all 0.3s;
         }
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         .modal { 
             display: none; 
@@ -56,42 +132,6 @@
             justify-content: center;
         }
         .modal.active { display: flex; }
-
-        .action-btn {
-            padding: 6px 16px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .edit-btn { background: #3b82f6; color: white; }
-        .edit-btn:hover { background: #2563eb; }
-
-        table { border-collapse: separate; border-spacing: 0; }
-        tbody tr { transition: all 0.2s; }
-        tbody tr:hover { background: #f9fafb; }
-
-        .payment-tracker-container {
-            width: 100%;
-            height: 800px;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .week-badge {
-            display: inline-block;
-            background: #10b981;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-left: 8px;
-        }
     </style>
 </head>
 <body class="min-h-screen p-8">
@@ -107,7 +147,7 @@
                         <div class="h-16 w-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg">U</div>
                         <div>
                             <h1 class="text-4xl font-black text-gray-900 tracking-tight">CBS Education</h1>
-                            <p class="text-sm font-bold text-purple-600 uppercase tracking-wider">Unit Franchisee Center - Mumbai (Updated)</p>
+                            <p class="text-sm font-bold text-purple-600 uppercase tracking-wider">Unit Franchisee Center - Mumbai</p>
                         </div>
                     </div>
                 </div>
@@ -135,17 +175,17 @@
                 <h3 id="stat-total" class="text-4xl font-black text-gray-900">0</h3>
             </div>
             <div class="stat-card border-l-4 border-purple-500">
-                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Active Batches</p>
-                <h3 id="stat-batches" class="text-4xl font-black text-gray-900">0</h3>
+                <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Center Status</p>
+                <h3 class="text-2xl font-black text-purple-600">Active</h3>
             </div>
         </div>
 
         <!-- Students Table -->
-        <div class="glass-card rounded-3xl overflow-hidden mb-8">
+        <div class="glass-card rounded-3xl overflow-hidden">
             <div class="p-8 border-b border-gray-200 flex justify-between items-center flex-wrap gap-4">
-                <h2 class="text-2xl font-black text-gray-900">Student Management</h2>
+                <h2 class="text-2xl font-black text-gray-900">Student Directory</h2>
                 <div class="flex gap-4 items-center flex-wrap">
-                    <input type="text" id="search-students" placeholder="Search by name, ID, email..." class="px-4 py-3 border-2 border-gray-200 rounded-lg w-80" onkeyup="searchStudents()">
+                    <input type="text" id="search-students" placeholder="Search by name, ID, email..." class="search-box w-80" onkeyup="searchStudents()">
                     <button onclick="openTransferModal()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold rounded-xl hover:shadow-lg transition-all">
                         🔄 Transfer In
                     </button>
@@ -161,6 +201,7 @@
                             <th class="px-8 py-5 text-left">Full Name</th>
                             <th class="px-8 py-5 text-left">Student ID</th>
                             <th class="px-8 py-5 text-left">Username (Email)</th>
+                            <th class="px-8 py-5 text-left">Password</th>
                             <th class="px-8 py-5 text-left">Level</th>
                             <th class="px-8 py-5 text-center">Status</th>
                             <th class="px-8 py-5 text-center">Actions</th>
@@ -170,95 +211,179 @@
                 </table>
             </div>
         </div>
+    </div>
 
-        <!-- Batches Tab -->
-        <div class="glass-card rounded-3xl overflow-hidden mb-8">
-            <div class="p-8 border-b border-gray-200 flex justify-between items-center">
-                <h2 class="text-2xl font-black text-gray-900">Batches</h2>
-                <button onclick="openCreateBatchModal()" class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:shadow-lg transition-all">
-                    ➕ Create New Batch
-                </button>
+    <!-- Edit Student Modal -->
+    <div id="editModal" class="modal">
+        <div class="bg-white rounded-3xl overflow-hidden max-w-2xl w-full m-4">
+            <div class="p-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex justify-between items-center">
+                <div>
+                    <h3 class="text-3xl font-black">Edit Student</h3>
+                    <p class="text-indigo-100 text-sm font-semibold mt-1">Update student information</p>
+                </div>
+                <button onclick="closeModal('editModal')" class="text-3xl hover:bg-white hover:bg-opacity-20 w-12 h-12 rounded-xl transition">×</button>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50 text-xs font-black text-gray-500 uppercase tracking-wider">
-                        <tr>
-                            <th class="px-8 py-5 text-left">Batch Name</th>
-                            <th class="px-8 py-5 text-left">Level</th>
-                            <th class="px-8 py-5 text-left">Start Date</th>
-                            <th class="px-8 py-5 text-left">End Date</th>
-                            <th class="px-8 py-5 text-center">Duration</th>
-                            <th class="px-8 py-5 text-left">Max Students</th>
-                            <th class="px-8 py-5 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-batches" class="divide-y divide-gray-100"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Payment Tracker (Embedded) -->
-        <div class="glass-card rounded-3xl overflow-hidden">
-            <div class="p-8 border-b border-gray-200">
-                <h2 class="text-2xl font-black text-gray-900">💳 Payment Tracker</h2>
-                <p class="text-sm text-gray-600 mt-2">Your class fees are automatically loaded below</p>
-            </div>
-            <div class="payment-tracker-container">
-                <iframe id="payment-tracker-frame" style="width: 100%; height: 100%; border: none;" src="about:blank"></iframe>
+            <div class="p-8">
+                <form id="edit-form">
+                    <input type="hidden" id="edit-user-id">
+                    
+                    <div class="mb-6">
+                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Full Name</label>
+                        <input type="text" id="edit-name" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Username (Email)</label>
+                        <input type="email" id="edit-email" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold mono" required>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">New Password (leave blank to keep current)</label>
+                        <input type="text" id="edit-password" placeholder="Enter new password" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold mono">
+                    </div>
+                    
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
+                        Save Changes
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- Enroll Student Modal -->
+    <!-- Enroll Student Modal - EXPANDED VERSION -->
     <div id="enrollModal" class="modal">
-        <div class="bg-white rounded-3xl overflow-hidden max-w-2xl w-full m-4">
-            <div class="p-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex justify-between items-center">
+        <div class="bg-white rounded-3xl overflow-hidden max-w-3xl w-full m-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex justify-between items-center sticky top-0">
                 <div>
                     <h3 class="text-3xl font-black">Enroll New Student</h3>
-                    <p class="text-indigo-100 text-sm font-semibold mt-1">Generate National Scholar ID</p>
+                    <p class="text-indigo-100 text-sm font-semibold mt-1">Generate National Scholar ID with Complete Information</p>
                 </div>
                 <button onclick="closeModal('enrollModal')" class="text-3xl hover:bg-white hover:bg-opacity-20 w-12 h-12 rounded-xl transition">×</button>
             </div>
             
+            <!-- Success View -->
             <div id="enroll-success-view" style="display: none;" class="p-12 text-center">
                 <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-5xl mx-auto mb-6">✅</div>
                 <h4 class="text-3xl font-black text-gray-900 mb-3">Student Enrolled Successfully!</h4>
                 <p class="text-gray-600 font-semibold mb-8">Please provide these credentials to the student:</p>
-                <div class="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 mb-8">
-                    <pre id="enroll-creds-output" class="mono text-sm font-bold text-purple-600 whitespace-pre-wrap"></pre>
+                <div class="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 mb-8 text-left">
+                    <pre id="enroll-creds-output" class="mono text-xs font-bold text-purple-600 whitespace-pre-wrap"></pre>
                 </div>
                 <button onclick="window.location.reload()" class="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all">
                     Return to Dashboard
                 </button>
             </div>
             
+            <!-- Form View -->
             <div id="enroll-form-view" class="p-8">
                 <form id="enroll-form">
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Student Full Name</label>
-                        <input type="text" id="s-name" placeholder="Firstname Surname" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                    <!-- STUDENT INFORMATION SECTION -->
+                    <div class="mb-6 pb-6 border-b-2 border-gray-200">
+                        <h4 class="text-sm font-black text-gray-700 uppercase tracking-wider mb-4">📋 Student Information</h4>
+                        
+                        <div class="mb-4">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Student Full Name *</label>
+                            <input type="text" id="s-name" placeholder="Firstname Surname" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Date of Birth *</label>
+                                <input type="date" id="s-dob" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Gender *</label>
+                                <select id="s-gender" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Current Standard/Grade *</label>
+                                <select id="s-standard" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                                    <option value="">Select Standard</option>
+                                    <option value="1">Grade 1</option>
+                                    <option value="2">Grade 2</option>
+                                    <option value="3">Grade 3</option>
+                                    <option value="4">Grade 4</option>
+                                    <option value="5">Grade 5</option>
+                                    <option value="6">Grade 6</option>
+                                    <option value="7">Grade 7</option>
+                                    <option value="8">Grade 8</option>
+                                    <option value="9">Grade 9</option>
+                                    <option value="10">Grade 10</option>
+                                    <option value="11">Grade 11</option>
+                                    <option value="12">Grade 12</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">School Name *</label>
+                                <input type="text" id="s-school" placeholder="e.g., St. Xavier's School" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Starting UCMAS Level *</label>
+                            <select id="s-level" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                                <option value="">Select Level</option>
+                                <option value="1">Level 0 (Foundation)</option>
+                                <option value="2">Level 1</option>
+                                <option value="3">Level 2</option>
+                                <option value="4">Level 3</option>
+                                <option value="5">Level 4</option>
+                                <option value="6">Level 5</option>
+                                <option value="7">Level 7</option>
+                                <option value="8">Level 8</option>
+                                <option value="9">Level 9</option>
+                                <option value="10">Level 10</option>
+                            </select>
+                        </div>
                     </div>
-                    
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Date of Birth</label>
-                        <input type="date" id="s-dob" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+
+                    <!-- PARENT/GUARDIAN INFORMATION SECTION -->
+                    <div class="mb-6 pb-6 border-b-2 border-gray-200">
+                        <h4 class="text-sm font-black text-gray-700 uppercase tracking-wider mb-4">👨‍👩‍👦 Parent/Guardian Information</h4>
+                        
+                        <div class="mb-4">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Father's Name *</label>
+                            <input type="text" id="s-father-name" placeholder="Full Name" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Father's Mobile Number *</label>
+                            <input type="tel" id="s-father-phone" placeholder="+91 XXXXX XXXXX" pattern="[0-9\s+\-]{10,}" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Mother's Name *</label>
+                            <input type="text" id="s-mother-name" placeholder="Full Name" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Mother's Mobile Number *</label>
+                            <input type="tel" id="s-mother-phone" placeholder="+91 XXXXX XXXXX" pattern="[0-9\s+\-]{10,}" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Primary Contact (Father/Mother)</label>
+                            <select id="s-primary-contact" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold">
+                                <option value="father">Father</option>
+                                <option value="mother">Mother</option>
+                                <option value="other">Other Guardian</option>
+                            </select>
+                        </div>
                     </div>
-                    
-                    <div class="mb-8">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Starting Level</label>
-                        <select id="s-level" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none font-semibold">
-                            <option value="0">Level 0 (Foundation)</option>
-                            <option value="1">Level 1</option>
-                            <option value="2">Level 2</option>
-                            <option value="3">Level 3</option>
-                            <option value="4">Level 4</option>
-                            <option value="5">Level 5</option>
-                            <option value="6">Level 6</option>
-                            <option value="7">Level 7</option>
-                            <option value="8">Level 8</option>
-                            <option value="9">Level 9</option>
-                            <option value="10">Level 10</option>
-                        </select>
+
+                    <!-- ENROLLMENT DETAILS -->
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-6">
+                        <p class="text-xs font-bold text-blue-700">✓ Auto-Generated Credentials:</p>
+                        <p class="text-xs text-blue-600 mt-2">Email: <span id="auto-email" class="font-mono font-bold">--@ucmas.in</span></p>
+                        <p class="text-xs text-blue-600">Password: <span class="font-mono font-bold">Welcome@123</span></p>
                     </div>
                     
                     <button type="submit" id="enroll-btn" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
@@ -315,76 +440,17 @@
         </div>
     </div>
 
-    <!-- Create Batch Modal -->
-    <div id="createBatchModal" class="modal">
-        <div class="bg-white rounded-3xl overflow-hidden max-w-2xl w-full m-4">
-            <div class="p-8 bg-gradient-to-r from-cyan-500 to-blue-600 text-white flex justify-between items-center">
-                <div>
-                    <h3 class="text-3xl font-black">Create New Batch</h3>
-                    <p class="text-cyan-100 text-sm font-semibold mt-1">End date is optional - enter it when batch completes</p>
-                </div>
-                <button onclick="closeModal('createBatchModal')" class="text-3xl hover:bg-white hover:bg-opacity-20 w-12 h-12 rounded-xl transition">×</button>
-            </div>
-            
-            <div class="p-8">
-                <form id="create-batch-form">
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Batch Name</label>
-                        <input type="text" id="batch-name" placeholder="e.g., Morning Foundation Group" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-cyan-500 focus:outline-none font-semibold" required>
-                    </div>
-
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Level</label>
-                        <select id="batch-level" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-cyan-500 focus:outline-none font-semibold" required>
-                            <option value="">Select Level...</option>
-                            <option value="0">Level 0 (Foundation)</option>
-                            <option value="1">Level 1</option>
-                            <option value="2">Level 2</option>
-                            <option value="3">Level 3</option>
-                            <option value="4">Level 4</option>
-                            <option value="5">Level 5</option>
-                            <option value="6">Level 6</option>
-                            <option value="7">Level 7</option>
-                            <option value="8">Level 8</option>
-                            <option value="9">Level 9</option>
-                            <option value="10">Level 10</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Start Date <span class="text-red-500">*</span></label>
-                        <input type="date" id="batch-start-date" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-cyan-500 focus:outline-none font-semibold" required>
-                    </div>
-
-                    <div class="mb-6">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">End Date <span class="text-gray-400">(Optional)</span></label>
-                        <input type="date" id="batch-end-date" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-cyan-500 focus:outline-none font-semibold">
-                        <p id="batch-duration" class="text-sm text-gray-500 mt-2"></p>
-                    </div>
-
-                    <div class="mb-8">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Max Students</label>
-                        <input type="number" id="batch-max-students" placeholder="30" value="30" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-cyan-500 focus:outline-none font-semibold">
-                    </div>
-                    
-                    <button type="submit" id="batch-btn" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black rounded-xl hover:shadow-lg transition-all text-sm uppercase tracking-wider">
-                        Create Batch
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Initialize Supabase Client
+        // Initialize Supabase - Mumbai Configuration
         const SUPABASE_URL = "https://offdxndcnsiejmwdznwb.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_2nb0HWCrTlZ3RvyHDn5Rmg_yUoz6xBW";
         const supabase_client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let allStudents = [];
-        let allBatches = [];
 
-        // Logout Function
+        // ============================================================================
+        // LOGOUT FUNCTION
+        // ============================================================================
         async function logout() {
             try {
                 await supabase_client.auth.signOut();
@@ -397,7 +463,9 @@
             }
         }
 
-        // Initialize Dashboard
+        // ============================================================================
+        // INITIALIZE DASHBOARD
+        // ============================================================================
         async function init() {
             const userEmail = sessionStorage.getItem('userEmail') || "unit@ucmas.in";
             const centerCode = userEmail.split('@')[0].toUpperCase();
@@ -407,22 +475,21 @@
             document.getElementById('display-name').innerText = userName;
             
             await loadStudents();
-            await loadBatches();
-            await loadPaymentTracker();
-
-            // Calculate batch duration on end date change
-            document.getElementById('batch-end-date').addEventListener('change', calculateBatchDuration);
         }
 
-        // Load Students
+        // ============================================================================
+        // LOAD STUDENTS FROM DATABASE
+        // ============================================================================
         async function loadStudents() {
             try {
                 const unitId = sessionStorage.getItem('userId');
-                const { data } = await supabase_client
+                const { data, error } = await supabase_client
                     .from('profiles')
                     .select('*')
                     .eq('role', 'student')
                     .eq('current_unit_id', unitId);
+
+                if (error) throw error;
 
                 allStudents = data || [];
                 const activeCount = allStudents.filter(s => s.is_active !== false).length;
@@ -431,136 +498,163 @@
                 renderStudents(allStudents);
             } catch (err) {
                 console.error("Error loading students:", err);
+                alert("Failed to load students");
             }
         }
 
-        // Load Batches
-        async function loadBatches() {
-            try {
-                const unitId = sessionStorage.getItem('userId');
-                const { data } = await supabase_client
-                    .from('batches')
-                    .select('*')
-                    .eq('unit_franchisee_id', unitId);
-
-                allBatches = data || [];
-                document.getElementById('stat-batches').innerText = allBatches.filter(b => !b.end_date || new Date(b.end_date) > new Date()).length;
-                renderBatches();
-            } catch (err) {
-                console.error("Error loading batches:", err);
-            }
-        }
-
-        // Load Payment Tracker
-        async function loadPaymentTracker() {
-            try {
-                const { data: { session } } = await supabase_client.auth.getSession();
-                const unitId = sessionStorage.getItem('userId');
-
-                // Get UF's class
-                const { data: ufData } = await supabase_client
-                    .from('unit_franchisees')
-                    .select('uf_class')
-                    .eq('id', unitId)
-                    .single();
-
-                const ufClass = ufData?.uf_class || 'A';
-
-                // Create secure embedded payment tracker URL
-                // In production, this would be your actual payment tracker domain
-                const paymentTrackerUrl = `https://your-payment-tracker.com/embed?class=${ufClass}&token=${session?.access_token}`;
-                
-                // For now, embed a placeholder
-                const frame = document.getElementById('payment-tracker-frame');
-                frame.src = 'about:blank';
-                frame.innerHTML = '<div style="padding: 40px; text-align: center; color: #666;"><p>Payment Tracker Loading...</p><p>Class: ' + ufClass + '</p></div>';
-
-            } catch (err) {
-                console.error("Error loading payment tracker:", err);
-            }
-        }
-
-        // Render Students Table
+        // ============================================================================
+        // RENDER STUDENTS TABLE
+        // ============================================================================
         function renderStudents(students) {
             const tbody = document.getElementById('table-students');
             
             if (!students || students.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-8 py-16 text-center text-gray-400 font-semibold italic">No students enrolled yet. Click "Enroll Student" to get started.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-8 py-16 text-center text-gray-400 font-semibold italic">No students enrolled yet. Click "Enroll Student" to get started.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = students.map(student => `
                 <tr>
-                    <td class="px-8 py-5 font-bold text-gray-900">${student.full_name || 'N/A'}</td>
+                    <td class="px-8 py-5 font-bold text-gray-900">
+                        ${student.full_name || 'N/A'}
+                    </td>
                     <td class="px-8 py-5">
-                        <span class="mono font-bold text-purple-600 text-sm">${student.student_code || 'PROCESSING...'}</span>
+                        <span class="mono font-bold text-purple-600 text-sm">
+                            ${student.student_code || 'PROCESSING...'}
+                        </span>
+                        ${student.current_unit_id !== student.parent_unit_id ? 
+                            '<span class="ml-2 px-2 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-black uppercase">Transferred</span>' 
+                            : ''}
                     </td>
                     <td class="px-8 py-5">
                         <span class="mono text-sm font-semibold text-gray-700">${student.email || 'N/A'}</span>
                     </td>
-                    <td class="px-8 py-5 font-bold text-gray-700">Level ${student.current_level || 0}</td>
+                    <td class="px-8 py-5">
+                        <span class="password-field mono text-sm font-bold text-gray-900 inline-block px-3 py-1 bg-gray-100 rounded-lg" onclick="togglePassword(this)">
+                            ${student.password || 'Welcome@123'}
+                        </span>
+                    </td>
+                    <td class="px-8 py-5 font-bold text-gray-700">Level ${student.current_level || 1}</td>
                     <td class="px-8 py-5 text-center">
                         ${student.is_active !== false 
                             ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-black uppercase">Active</span>' 
                             : '<span class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-black uppercase">Inactive</span>'}
                     </td>
-                    <td class="px-8 py-5 text-center">
-                        <button class="action-btn edit-btn" onclick="openEditModal('${student.id}')">Edit</button>
+                    <td class="px-8 py-5">
+                        <div class="flex gap-3 items-center justify-center">
+                            <button class="action-btn edit-btn" onclick="openEditModal('${student.id}')">Edit</button>
+                            <div class="status-toggle ${student.is_active !== false ? 'active' : ''}" 
+                                 onclick="toggleStatus('${student.id}', ${student.is_active !== false})"></div>
+                        </div>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // Render Batches Table
-        function renderBatches() {
-            const tbody = document.getElementById('table-batches');
-            
-            if (allBatches.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-8 py-16 text-center text-gray-400 font-semibold italic">No batches created yet. Click "Create New Batch" to start.</td></tr>';
-                return;
-            }
+        // ============================================================================
+        // SEARCH STUDENTS
+        // ============================================================================
+        function searchStudents() {
+            const searchTerm = document.getElementById('search-students').value.toLowerCase();
+            const filtered = allStudents.filter(student => 
+                student.full_name?.toLowerCase().includes(searchTerm) ||
+                student.student_code?.toLowerCase().includes(searchTerm) ||
+                student.email?.toLowerCase().includes(searchTerm)
+            );
+            renderStudents(filtered);
+        }
 
-            tbody.innerHTML = allBatches.map(batch => {
-                let duration = '--';
-                if (batch.start_date && batch.end_date) {
-                    const start = new Date(batch.start_date);
-                    const end = new Date(batch.end_date);
-                    const weeks = Math.floor((end - start) / (7 * 24 * 60 * 60 * 1000));
-                    duration = `${weeks} weeks`;
+        // ============================================================================
+        // TOGGLE PASSWORD VISIBILITY
+        // ============================================================================
+        function togglePassword(element) {
+            element.classList.toggle('visible');
+        }
+
+        // ============================================================================
+        // TOGGLE STATUS (Active/Inactive)
+        // ============================================================================
+        async function toggleStatus(userId, currentStatus) {
+            const newStatus = !currentStatus;
+            try {
+                const { data: { session } } = await supabase_client.auth.getSession();
+
+                const { data, error } = await supabase_client.functions.invoke('manage-student', {
+                    body: { 
+                        action: 'toggle_status',
+                        user_id: userId,
+                        is_active: newStatus
+                    },
+                    headers: { Authorization: `Bearer ${session?.access_token}` }
+                });
+
+                if (error || (data && data.error)) {
+                    throw new Error(data?.error || error?.message || 'Toggle failed');
+                }
+                
+                await loadStudents();
+            } catch (err) {
+                console.error('Error toggling status:', err);
+                alert('Failed to update status');
+            }
+        }
+
+        // ============================================================================
+        // OPEN EDIT MODAL
+        // ============================================================================
+        function openEditModal(userId) {
+            const student = allStudents.find(s => s.id === userId);
+            if (!student) return;
+
+            document.getElementById('edit-user-id').value = userId;
+            document.getElementById('edit-name').value = student.full_name || '';
+            document.getElementById('edit-email').value = student.email || '';
+            document.getElementById('edit-password').value = '';
+            
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        // ============================================================================
+        // EDIT FORM SUBMISSION
+        // ============================================================================
+        document.getElementById('edit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userId = document.getElementById('edit-user-id').value;
+            const name = document.getElementById('edit-name').value;
+            const email = document.getElementById('edit-email').value;
+            const password = document.getElementById('edit-password').value;
+
+            try {
+                const { data: { session } } = await supabase_client.auth.getSession();
+
+                const { data, error } = await supabase_client.functions.invoke('manage-student', {
+                    body: { 
+                        action: 'update_user',
+                        user_id: userId,
+                        full_name: name,
+                        email: email,
+                        password: password || undefined
+                    },
+                    headers: { Authorization: `Bearer ${session?.access_token}` }
+                });
+
+                if (error || (data && data.error)) {
+                    throw new Error(data?.error || error?.message || 'Update failed');
                 }
 
-                return `
-                    <tr>
-                        <td class="px-8 py-5 font-bold text-gray-900">${batch.batch_name}</td>
-                        <td class="px-8 py-5">Level ${batch.level}</td>
-                        <td class="px-8 py-5 font-semibold text-gray-700">${new Date(batch.start_date).toLocaleDateString()}</td>
-                        <td class="px-8 py-5 font-semibold text-gray-700">${batch.end_date ? new Date(batch.end_date).toLocaleDateString() : 'Not Set'}</td>
-                        <td class="px-8 py-5 text-center font-bold">${duration}</td>
-                        <td class="px-8 py-5 text-gray-700">${batch.max_students || 30}</td>
-                        <td class="px-8 py-5 text-center">
-                            <button class="action-btn edit-btn" onclick="editBatch('${batch.id}')">Edit</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Calculate batch duration
-        function calculateBatchDuration() {
-            const startDate = document.getElementById('batch-start-date').value;
-            const endDate = document.getElementById('batch-end-date').value;
-
-            if (startDate && endDate) {
-                const start = new Date(startDate);
-                const end = new Date(endDate);
-                const weeks = Math.floor((end - start) / (7 * 24 * 60 * 60 * 1000));
-                document.getElementById('batch-duration').innerHTML = `<span class="week-badge">${weeks} weeks</span>`;
-            } else {
-                document.getElementById('batch-duration').innerHTML = '';
+                alert('Student updated successfully!');
+                closeModal('editModal');
+                await loadStudents();
+            } catch (err) {
+                console.error('Error updating student:', err);
+                alert('Failed to update student: ' + err.message);
             }
-        }
+        });
 
-        // Modal Functions
+        // ============================================================================
+        // MODAL FUNCTIONS
+        // ============================================================================
         function openEnrollModal() {
             document.getElementById('enrollModal').classList.add('active');
             document.getElementById('enroll-form-view').style.display = 'block';
@@ -573,35 +667,36 @@
             document.getElementById('transfer-success-view').style.display = 'none';
         }
 
-        function openCreateBatchModal() {
-            document.getElementById('createBatchModal').classList.add('active');
-        }
-
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
         }
 
-        // Search Students
-        function searchStudents() {
-            const searchTerm = document.getElementById('search-students').value.toLowerCase();
-            const filtered = allStudents.filter(student => 
-                student.full_name?.toLowerCase().includes(searchTerm) ||
-                student.student_code?.toLowerCase().includes(searchTerm) ||
-                student.email?.toLowerCase().includes(searchTerm)
-            );
-            renderStudents(filtered);
-        }
-
-        // Enroll Form Submission
+        // ============================================================================
+        // ENROLL STUDENT FORM - EXPANDED WITH ALL FIELDS
+        // ============================================================================
         document.getElementById('enroll-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('enroll-btn');
+            
+            // Student Information
             const fullName = document.getElementById('s-name').value.trim();
             const dobValue = document.getElementById('s-dob').value;
+            const gender = document.getElementById('s-gender').value;
+            const standard = document.getElementById('s-standard').value;
+            const schoolName = document.getElementById('s-school').value.trim();
             const level = document.getElementById('s-level').value;
+            
+            // Parent Information
+            const fatherName = document.getElementById('s-father-name').value.trim();
+            const fatherPhone = document.getElementById('s-father-phone').value.trim();
+            const motherName = document.getElementById('s-mother-name').value.trim();
+            const motherPhone = document.getElementById('s-mother-phone').value.trim();
+            const primaryContact = document.getElementById('s-primary-contact').value;
 
-            if (!fullName || !dobValue) {
-                alert("All fields are required.");
+            // Validate all required fields
+            if (!fullName || !dobValue || !gender || !standard || !schoolName || !level || 
+                !fatherName || !fatherPhone || !motherName || !motherPhone) {
+                alert("All fields marked with * are required.");
                 return;
             }
 
@@ -612,13 +707,21 @@
                 const { data: { session } } = await supabase_client.auth.getSession();
                 const parentUnitId = sessionStorage.getItem('userId');
 
-                // Call manage-student to create student
+                // Step 1: Call manage-student to create student with all information
                 const { data, error } = await supabase_client.functions.invoke('manage-student', {
                     body: { 
                         action: 'create_student', 
                         full_name: fullName,
                         date_of_birth: dobValue,
+                        gender: gender,
+                        standard: standard,
+                        school_name: schoolName,
                         current_level: level,
+                        father_name: fatherName,
+                        father_phone: fatherPhone,
+                        mother_name: motherName,
+                        mother_phone: motherPhone,
+                        primary_contact: primaryContact,
                         parent_unit_id: parentUnitId
                     },
                     headers: { Authorization: `Bearer ${session.access_token}` }
@@ -626,9 +729,9 @@
 
                 if (error || (data && data.error)) throw new Error(data?.error || error?.message || 'Enrollment failed');
 
-                // Try to create auth user
+                // Step 2: Create auth user using edge function
                 try {
-                    await supabase_client.functions.invoke('create-student-user', {
+                    const createUserResponse = await supabase_client.functions.invoke('create-student-user', {
                         body: { 
                             full_name: fullName,
                             student_code: data.student_code,
@@ -636,24 +739,50 @@
                         },
                         headers: { Authorization: `Bearer ${session.access_token}` }
                     });
+
+                    if (!createUserResponse.error && createUserResponse.data?.success) {
+                        console.log('Auth user created successfully for student');
+                    }
                 } catch (authErr) {
-                    console.warn('Auth user creation warning:', authErr);
+                    console.warn('Warning: Could not auto-create auth user, but student record created:', authErr);
                 }
 
+                // Show success view with complete information
                 document.getElementById('enroll-form-view').style.display = 'none';
                 document.getElementById('enroll-success-view').style.display = 'block';
                 document.getElementById('enroll-creds-output').innerText = 
-                    `✅ Student Enrolled!\n\nStudent ID: ${data.student_code}\nUsername: ${data.email}\nPassword: ${data.password}`;
+                    `✅ STUDENT ENROLLED SUCCESSFULLY!\n\n` +
+                    `=== LOGIN CREDENTIALS ===\n` +
+                    `Student ID: ${data.student_code}\n` +
+                    `Username: ${data.email}\n` +
+                    `Password: ${data.password}\n\n` +
+                    `=== STUDENT INFORMATION ===\n` +
+                    `Name: ${fullName}\n` +
+                    `Gender: ${gender.toUpperCase()}\n` +
+                    `Standard: Grade ${standard}\n` +
+                    `School: ${schoolName}\n` +
+                    `UCMAS Level: Level ${level}\n` +
+                    `Date of Birth: ${dobValue}\n\n` +
+                    `=== PARENT/GUARDIAN INFORMATION ===\n` +
+                    `Father: ${fatherName}\n` +
+                    `Father Phone: ${fatherPhone}\n` +
+                    `Mother: ${motherName}\n` +
+                    `Mother Phone: ${motherPhone}\n` +
+                    `Primary Contact: ${primaryContact.toUpperCase()}\n\n` +
+                    `(Auth user created automatically)`;
 
             } catch (err) {
                 console.error('Enrollment error:', err);
-                alert("Enrollment Error: " + (err.message || 'Unknown error'));
+                const errorMsg = err.message || 'Unknown error occurred';
+                alert("Enrollment Error: " + errorMsg);
                 btn.disabled = false;
                 btn.innerText = "Generate ID & Enroll";
             }
         });
 
-        // Transfer Form Submission
+        // ============================================================================
+        // TRANSFER STUDENT FORM
+        // ============================================================================
         document.getElementById('transfer-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('transfer-btn');
@@ -670,7 +799,11 @@
 
             try {
                 const currentUnitId = sessionStorage.getItem('userId');
-                const { data: { session } } = await supabase_client.auth.getSession();
+                const { data: { session }, error: sessionError } = await supabase_client.auth.getSession();
+
+                if (sessionError || !session) {
+                    throw new Error('Session expired. Please login again.');
+                }
 
                 const { data, error } = await supabase_client.functions.invoke('manage-student', {
                     body: { 
@@ -682,10 +815,19 @@
                     headers: { Authorization: `Bearer ${session.access_token}` }
                 });
 
-                if (error || (data && data.error)) throw new Error(data?.error || error?.message || 'Transfer failed');
+                if (error) {
+                    console.error('Edge function error:', error);
+                    throw new Error(error.message || 'Transfer failed');
+                }
 
+                if (data && data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Show success view
                 document.getElementById('transfer-form-view').style.display = 'none';
                 document.getElementById('transfer-success-view').style.display = 'block';
+                document.getElementById('transfer-success-message').innerText = data.message || 'Student transferred successfully!';
 
             } catch (err) {
                 console.error('Transfer error:', err);
@@ -695,66 +837,9 @@
             }
         });
 
-        // Create Batch Form Submission
-        document.getElementById('create-batch-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('batch-btn');
-            const batchName = document.getElementById('batch-name').value;
-            const level = document.getElementById('batch-level').value;
-            const startDate = document.getElementById('batch-start-date').value;
-            const endDate = document.getElementById('batch-end-date').value || null;
-            const maxStudents = document.getElementById('batch-max-students').value;
-
-            if (!batchName || !level || !startDate) {
-                alert("Batch name, level, and start date are required.");
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerText = "Creating Batch...";
-
-            try {
-                const { data: { session } } = await supabase_client.auth.getSession();
-                const unitId = sessionStorage.getItem('userId');
-
-                const { data, error } = await supabase_client.functions.invoke('manage-batch-v2', {
-                    body: {
-                        action: 'create',
-                        batch_name: batchName,
-                        start_date: startDate,
-                        end_date: endDate,
-                        level: level,
-                        uf_id: unitId,
-                        max_students: maxStudents
-                    },
-                    headers: { Authorization: `Bearer ${session.access_token}` }
-                });
-
-                if (error || (data && data.error)) throw new Error(data?.error || error?.message || 'Batch creation failed');
-
-                alert(`✅ Batch created successfully!`);
-                closeModal('createBatchModal');
-                document.getElementById('create-batch-form').reset();
-                await loadBatches();
-
-            } catch (err) {
-                console.error('Batch creation error:', err);
-                alert("Error: " + (err.message || 'Unknown error'));
-                btn.disabled = false;
-                btn.innerText = "Create Batch";
-            }
-        });
-
-        // Placeholder functions
-        function openEditModal(studentId) {
-            alert('Edit functionality can be extended here');
-        }
-
-        function editBatch(batchId) {
-            alert('Batch edit functionality can be extended here');
-        }
-
-        // Initialize on page load
+        // ============================================================================
+        // INITIALIZE ON PAGE LOAD
+        // ============================================================================
         init();
     </script>
     <footer style="
@@ -769,7 +854,10 @@
             font-size: 13px;
             letter-spacing: 0.5px;
         ">
-            © 2026 Developed by <span style="color: #fff; font-weight: 700;">Practice Buddy</span>. All rights reserved. | Unit Dashboard Updated
+            © 2026 Developed by <span style="
+            color: #fff;
+            font-weight: 700;
+            ">Practice Buddy</span>. All rights reserved.
         </footer>
 </body>
 </html>
